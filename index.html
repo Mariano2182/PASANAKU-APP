@@ -66,6 +66,11 @@
         .admin-table input { padding: 6px; font-size: 14px; }
         .btn-admin-save { background-color: #0284c7; font-size: 14px; padding: 6px 12px; width: auto; }
         .btn-add-player { background-color: #7c3aed; margin-bottom: 15px; width: auto; padding: 10px 20px; }
+
+        /* Contenedor del Libro de Actas */
+        .log-container { background: #fafafa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+        .log-line { padding: 6px 0; border-bottom: 1px dashed #e5e7eb; color: #374151; }
+        .log-line:first-child { font-weight: bold; color: #000; }
     </style>
 </head>
 <body>
@@ -169,6 +174,15 @@
                 </table>
             </div>
 
+            <!-- ================= LIBRO DE ACTAS DIGITAL (PÚBLICO) ================= -->
+            <div class="card">
+                <h2>📝 Libro de Actas Digital (Historial de Caja)</h2>
+                <p>Registro histórico e inalterable de movimientos del grupo.</p>
+                <div class="log-container" id="libro-de-actas">
+                    <div class="log-line">Cargando historial de auditoría...</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -190,9 +204,9 @@
         let authMode = 'login';
         let userEmailLogueado = "";
         let mesActualSeleccionado = 1;
-        let cacheDataFirebase = null; // Guardar datos locales para redibujar rápido al cambiar de mes
+        let cacheDataFirebase = null;
 
-        // Generar las opciones del selector del 1 al 18
+        // Generar opciones del selector
         const selectorMes = document.getElementById('selector-mes-global');
         for (let m = 1; m <= 18; m++) {
             let opt = document.createElement('option');
@@ -244,35 +258,40 @@
         function cerrarSesion() { firebase.auth().signOut(); }
         function cambiarVista(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        // CAMBIO DE MES DESDE EL SELECTOR
         function cambiarMesGlobal() {
             mesActualSeleccionado = parseInt(document.getElementById('selector-mes-global').value);
             document.getElementById('text-mes-titulo').textContent = `Mes ${mesActualSeleccionado}`;
             document.getElementById('text-mes-admin').textContent = `Mes ${mesActualSeleccionado}`;
-            
-            if(cacheDataFirebase) {
-                renderizarTablas(cacheDataFirebase);
-            }
+            if(cacheDataFirebase) renderizarTablas(cacheDataFirebase);
         }
 
-        // ESCUCHAR EN TIEMPO REAL
+        // GENERADOR DE FECHA Y HORA EXACTA (SOPORTE DE AUDITORÍA)
+        function generarLineaHistorial(textoAccion) {
+            const ahora = new Date();
+            const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const hora = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            
+            const logCompleto = `📝 ${fecha} ${hora} - ${textoAccion}`;
+            
+            // Subir al nodo de historial en Firebase usando un ID único generado con push()
+            db.ref('pasanaku_multimes/historial').push({
+                texto: logCompleto,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+
+        // ESCUCHAR CAMBIOS EN TIEMPO REAL
         function activarSincronizacionFirebase() {
+            // 1. Escuchar datos de los turnos
             db.ref('pasanaku_multimes').on('value', (snapshot) => {
                 let data = snapshot.val();
                 
-                // Inicializar base de datos con estructura de 18 meses si está vacía
                 if (!data) {
                     let turnosIniciales = {};
                     for(let i=1; i<=18; i++) {
                         let pagosMeses = {};
                         for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
-                        
-                        turnosIniciales[i] = { 
-                            numero: i, 
-                            nombre: "Participante " + i, 
-                            pagosMeses: pagosMeses, 
-                            cobrado: false 
-                        };
+                        turnosIniciales[i] = { numero: i, nombre: "Participante " + i, pagosMeses: pagosMeses, cobrado: false };
                     }
                     db.ref('pasanaku_multimes').set({
                         fondoAguinaldo: 0,
@@ -284,14 +303,37 @@
                 cacheDataFirebase = data;
                 renderizarTablas(data);
             });
+
+            // 2. Escuchar cambios específicos del Libro de Actas (Ordenado por los más recientes primero)
+            db.ref('pasanaku_multimes/historial').orderByChild('timestamp').on('value', (snapshot) => {
+                const cajaActas = document.getElementById('libro-de-actas');
+                cajaActas.innerHTML = "";
+                
+                let logs = [];
+                snapshot.forEach(childSnapshot => {
+                    logs.push(childSnapshot.val().texto);
+                });
+                
+                // Invertir orden para que los últimos movimientos salgan arriba de todo
+                logs.reverse();
+
+                if(logs.length === 0) {
+                    cajaActas.innerHTML = `<div class="log-line">Aún no se registran movimientos en el sistema.</div>`;
+                } else {
+                    logs.forEach(logText => {
+                        let div = document.createElement('div');
+                        div.className = "log-line";
+                        div.textContent = logText;
+                        cajaActas.appendChild(div);
+                    });
+                }
+            });
         }
 
         function renderizarTablas(data) {
-            // Fondo de Aguinaldo
             document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
             document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
 
-            // Calcular meses pagados totales del usuario logueado
             let mesesPagadosUsuario = 0;
             if (data.turnos) {
                 Object.values(data.turnos).forEach(t => {
@@ -306,7 +348,6 @@
 
             const tbodyPublico = document.getElementById('tabla-turnos-publica');
             tbodyPublico.innerHTML = "";
-            
             const tbodyAdmin = document.getElementById('tabla-turnos-admin');
             tbodyAdmin.innerHTML = "";
 
@@ -314,10 +355,8 @@
                 let listaOrdenada = Object.values(data.turnos).sort((a,b) => a.numero - b.numero);
 
                 listaOrdenada.forEach(t => {
-                    // Obtener pago del mes actual activo
                     let estadoPagoMesActual = (t.pagosMeses && t.pagosMeses[`mes_${mesActualSeleccionado}`]) ? t.pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
 
-                    // 1. Render Tabla Pública
                     let badgePago = estadoPagoMesActual === 'Pagado' ? '<span class="badge success">Al día</span>' : '<span class="badge danger">Pendiente</span>';
                     let badgeCobro = t.cobrado ? '<span class="badge success">Sí (Pozo Entregado)</span>' : '<span class="badge warning">Ahorrando</span>';
                     
@@ -325,7 +364,6 @@
                     trPub.innerHTML = `<td><strong>Turno ${t.numero}</strong></td><td>${t.nombre}</td><td>${badgePago}</td><td>${badgeCobro}</td>`;
                     tbodyPublico.appendChild(trPub);
 
-                    // 2. Render Tabla Admin
                     let trAdm = document.createElement('tr');
                     trAdm.innerHTML = `
                         <td><strong>${t.numero}</strong></td>
@@ -349,26 +387,42 @@
             }
         }
 
-        // GUARDAR DATOS DESDE EL PANEL
+        // GUARDAR DATOS Y DISPARAR LOG DE AUDITORÍA
         function guardarFilaAdmin(numeroTurno) {
             const nuevoNombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const nuevoPago = document.getElementById(`pago-${numeroTurno}`).value;
             const nuevoCobro = document.getElementById(`cobro-${numeroTurno}`).value === "true";
 
-            // Guardar el pago específicamente apuntando a la subcarpeta del mes seleccionado
+            // Obtener el estado previo guardado en caché antes de actualizar para armar un log ultra-preciso
+            let estadoPrevioPago = cacheDataFirebase.turnos[numeroTurno].pagosMeses ? cacheDataFirebase.turnos[numeroTurno].pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
+            let estadoPrevioCobro = cacheDataFirebase.turnos[numeroTurno].cobrado;
+
             let updates = {};
             updates[`pasanaku_multimes/turnos/${numeroTurno}/nombre`] = nuevoNombre;
             updates[`pasanaku_multimes/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
             updates[`pasanaku_multimes/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
 
             db.ref().update(updates).then(() => {
-                alert(`¡Turno ${numeroTurno} actualizado con éxito para el Mes ${mesActualSeleccionado}!`);
+                // Si cambió el estado de pago a 'Pagado', generar el log idéntico al solicitado
+                if (estadoPrevioPago !== "Pagado" && nuevoPago === "Pagado") {
+                    generarLineaHistorial(`Mariano confirmó el pago de $6.000 de ${nuevoNombre} (Mes ${mesActualSeleccionado}).`);
+                } 
+                // Si se marcó que cobró el pozo largo
+                else if (!estadoPrevioCobro && nuevoCobro) {
+                    generarLineaHistorial(`Mariano registró la entrega del Pozo mensual de $108.000 ARS a ${nuevoNombre}.`);
+                } 
+                // Log genérico de edición de datos
+                else {
+                    generarLineaHistorial(`Mariano actualizó la información del Turno ${numeroTurno} (${nuevoNombre}).`);
+                }
+                alert(`Cambios guardados e historial actualizado.`);
             });
         }
 
         function guardarAguinaldoGlobal() {
             const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
             db.ref('pasanaku_multimes/fondoAguinaldo').set(monto).then(() => {
+                generarLineaHistorial(`Mariano actualizó el Fondo de Aguinaldo Global a $${monto.toLocaleString('es-AR')} ARS.`);
                 alert("Bolsa de aguinaldo actualizada.");
             });
         }
@@ -378,7 +432,6 @@
                 let totalActual = snapshot.numChildren() || 0;
                 let nuevoNumero = totalActual + 1;
                 
-                // Crear los 18 meses por defecto para el participante nuevo
                 let pagosMeses = {};
                 for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
 
@@ -388,7 +441,8 @@
                     pagosMeses: pagosMeses,
                     cobrado: false
                 }).then(() => {
-                    alert(`¡Se añadió el Turno Número ${nuevoNumero}!`);
+                    generarLineaHistorial(`Mariano expandió el Pasanaku creando el Turno Número ${nuevoNumero}.`);
+                    alert(`¡Turno ${nuevoNumero} añadido!`);
                 });
             });
         }
