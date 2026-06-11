@@ -35,7 +35,7 @@
 
         .form-group { margin-bottom: 18px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; background: white; }
         
         button { padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         button:hover { background-color: var(--primary-hover); }
@@ -46,11 +46,15 @@
         .stat-card h3 { font-size: 14px; color: var(--text-light); text-transform: uppercase; }
         .stat-card .value { font-size: 24px; font-weight: bold; margin-top: 10px; }
         
+        .selector-mes-card { background: #e0f2fe; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; }
+        .selector-mes-card label { margin-bottom: 0; font-size: 16px; color: #0369a1; }
+        .selector-mes-card select { width: auto; min-width: 150px; padding: 8px; border-color: #7dd3fc; font-weight: bold; color: #0369a1; }
+
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
         .data-table th { background-color: #f9fafb; font-weight: 600; }
 
-        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
         .badge.success { background: #d1fae5; color: #065f46; }
         .badge.danger { background: #fee2e2; color: #991b1b; }
         .badge.warning { background: #fef3c7; color: #92400e; }
@@ -58,7 +62,6 @@
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 15px 25px; border-radius: 12px; }
         .btn-logout { width: auto; padding: 8px 16px; background-color: #374151; font-size: 14px; }
 
-        /* Panel de Admin Estilizado */
         .admin-box { border: 2px solid var(--primary); background: #f0fdf4; display: none; }
         .admin-table input { padding: 6px; font-size: 14px; }
         .btn-admin-save { background-color: #0284c7; font-size: 14px; padding: 6px 12px; width: auto; }
@@ -72,7 +75,7 @@
         <!-- ================= LOGIN / REGISTRO ================= -->
         <div id="view-auth" class="view card active">
             <h1>Pasanaku Digital 💸</h1>
-            <p style="text-align: center;">Gestión de turnos y cobros en tiempo real.</p>
+            <p style="text-align: center;">Gestión de turnos y cobros multimes en tiempo real.</p>
             <h2 id="auth-title">Iniciar Sesión</h2>
             <div class="form-group">
                 <label>Correo Electrónico:</label>
@@ -93,10 +96,18 @@
                 <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
 
+            <!-- FILTRO DE MES GLOBAL -->
+            <div class="selector-mes-card">
+                <label for="selector-mes-global"><strong>📅 Calendario del Pasanaku:</strong> Selecciona el mes que deseas revisar o cobrar:</label>
+                <select id="selector-mes-global" onchange="cambiarMesGlobal()">
+                    <!-- Se genera dinámicamente del 1 al 18 -->
+                </select>
+            </div>
+
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <h3>Mi Estado de Pago</h3>
-                    <div id="stat-mi-estado" class="value" style="color:var(--danger)">Pendiente</div>
+                    <h3>Mi Historial Total</h3>
+                    <div id="stat-mi-estado" class="value" style="color:var(--primary)">0 / 18 Meses</div>
                 </div>
                 <div class="stat-card">
                     <h3>Fondo Aguinaldo Total</h3>
@@ -110,15 +121,15 @@
 
             <!-- TABLA GENERAL DE TURNOS (VISTA DE TODOS) -->
             <div class="card">
-                <h2>Lista Oficial de Turnos y Estados</h2>
-                <p>Monto del Pozo mensual a cobrar por turno: <strong>$108.000 ARS</strong></p>
+                <h2>Lista Oficial de Estados - <span id="text-mes-titulo" style="color: var(--primary);">Mes 1</span></h2>
+                <p>Monto total estimado a cobrar por el dueño del turno este mes: <strong>$108.000 ARS</strong></p>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Turno</th>
                             <th>Participante</th>
-                            <th>Aporte Mes</th>
-                            <th>Estado del Pozo</th>
+                            <th>Aporte en este Mes</th>
+                            <th>¿Ya le tocó el Pozo?</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-turnos-publica">
@@ -130,7 +141,7 @@
             <!-- ================= PANEL EXCLUSIVO DEL ADMINISTRADOR ================= -->
             <div id="panel-administrador" class="card admin-box">
                 <h2>🛠️ Panel de Control (Organizador)</h2>
-                <p>Modifica los nombres, pagos y añade nuevos casilleros si se suma más gente.</p>
+                <p>Modifica los nombres de la lista y controla quién pagó el <strong id="text-mes-admin" style="color: var(--primary);">Mes 1</strong>.</p>
                 
                 <div class="form-group" style="max-width: 300px; display: flex; gap: 10px; align-items: flex-end;">
                     <div>
@@ -147,8 +158,8 @@
                         <tr>
                             <th>N° Turno</th>
                             <th>Nombre del Participante</th>
-                            <th>¿Pagó Cuota?</th>
-                            <th>¿Cobró el Pozo?</th>
+                            <th>Pago Mes Seleccionado</th>
+                            <th>¿Ya Cobró su Pozo?</th>
                             <th>Acción</th>
                         </tr>
                     </thead>
@@ -178,14 +189,24 @@
         const db = firebase.database();
         let authMode = 'login';
         let userEmailLogueado = "";
+        let mesActualSeleccionado = 1;
+        let cacheDataFirebase = null; // Guardar datos locales para redibujar rápido al cambiar de mes
 
-        // Al iniciar, escuchar estado del usuario
+        // Generar las opciones del selector del 1 al 18
+        const selectorMes = document.getElementById('selector-mes-global');
+        for (let m = 1; m <= 18; m++) {
+            let opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = `Mes ${m}`;
+            selectorMes.appendChild(opt);
+        }
+
+        // Monitorear Autenticación
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 userEmailLogueado = user.email;
                 document.getElementById('user-display-email').textContent = userEmailLogueado;
                 
-                // Mostrar panel de admin si eres tú
                 if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
                     document.getElementById('panel-administrador').style.display = "block";
                 } else {
@@ -209,7 +230,6 @@
         function procesarAutenticacion() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
-
             if (!email || !password) { alert("Completa todos los campos"); return; }
 
             if (authMode === 'login') {
@@ -224,120 +244,151 @@
         function cerrarSesion() { firebase.auth().signOut(); }
         function cambiarVista(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        // SINCRONIZACIÓN Y CREACIÓN DE LOS 18 CASILLEROS INICIALES
+        // CAMBIO DE MES DESDE EL SELECTOR
+        function cambiarMesGlobal() {
+            mesActualSeleccionado = parseInt(document.getElementById('selector-mes-global').value);
+            document.getElementById('text-mes-titulo').textContent = `Mes ${mesActualSeleccionado}`;
+            document.getElementById('text-mes-admin').textContent = `Mes ${mesActualSeleccionado}`;
+            
+            if(cacheDataFirebase) {
+                renderizarTablas(cacheDataFirebase);
+            }
+        }
+
+        // ESCUCHAR EN TIEMPO REAL
         function activarSincronizacionFirebase() {
-            db.ref('pasanaku_v2').on('value', (snapshot) => {
+            db.ref('pasanaku_multimes').on('value', (snapshot) => {
                 let data = snapshot.val();
                 
-                // Si la base de datos está vacía, creamos los 18 casilleros iniciales automáticamente
+                // Inicializar base de datos con estructura de 18 meses si está vacía
                 if (!data) {
                     let turnosIniciales = {};
                     for(let i=1; i<=18; i++) {
-                        turnosIniciales[i] = { numero: i, nombre: "Participante " + i, pago: "Pendiente", cobrado: false };
+                        let pagosMeses = {};
+                        for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
+                        
+                        turnosIniciales[i] = { 
+                            numero: i, 
+                            nombre: "Participante " + i, 
+                            pagosMeses: pagosMeses, 
+                            cobrado: false 
+                        };
                     }
-                    db.ref('pasanaku_v2').set({
+                    db.ref('pasanaku_multimes').set({
                         fondoAguinaldo: 0,
                         turnos: turnosIniciales
                     });
                     return;
                 }
 
-                // Renderizar Datos Generales
-                document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
-                document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
-
-                // Buscar el estado de pago del usuario logueado en la lista de turnos
-                let miEstado = "Pendiente (Sin turno asignado)";
-                if (data.turnos) {
-                    Object.values(data.turnos).forEach(t => {
-                        if(t.nombre.toLowerCase() === userEmailLogueado.toLowerCase()) {
-                            miEstado = t.pago === "Pagado" ? "Al día ✅" : "Pendiente ⏳";
-                        }
-                    });
-                }
-                document.getElementById('stat-mi-estado').textContent = miEstado;
-                document.getElementById('stat-mi-estado').style.color = miEstado.includes("día") ? "var(--success)" : "var(--danger)";
-
-                // Renderizar Tabla Pública
-                const tbodyPublico = document.getElementById('tabla-turnos-publica');
-                tbodyPublico.innerHTML = "";
-                
-                // Renderizar Tabla de Administración
-                const tbodyAdmin = document.getElementById('tabla-turnos-admin');
-                tbodyAdmin.innerHTML = "";
-
-                if (data.turnos) {
-                    // Ordenar por número de turno
-                    let listaOrdenada = Object.values(data.turnos).sort((a,b) => a.numero - b.numero);
-
-                    listaOrdenada.forEach(t => {
-                        // 1. Llenar tabla pública
-                        let badgePago = t.pago === 'Pagado' ? '<span class="badge success">Al día</span>' : '<span class="badge danger">Pendiente</span>';
-                        let badgeCobro = t.cobrado ? '<span class="badge success">Pozo Entregado</span>' : '<span class="badge warning">Ahorrando</span>';
-                        
-                        let trPub = document.createElement('tr');
-                        trPub.innerHTML = `<td><strong>Turno ${t.numero}</strong></td><td>${t.nombre}</td><td>${badgePago}</td><td>${badgeCobro}</td>`;
-                        tbodyPublico.appendChild(trPub);
-
-                        // 2. Llenar tabla de administración
-                        let trAdm = document.createElement('tr');
-                        trAdm.innerHTML = `
-                            <td><strong>${t.numero}</strong></td>
-                            <td><input type="text" id="name-${t.numero}" value="${t.nombre}"></td>
-                            <td>
-                                <select id="pago-${t.numero}">
-                                    <option value="Pendiente" ${t.pago === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
-                                    <option value="Pagado" ${t.pago === 'Pagado' ? 'selected' : ''}>Pagado</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select id="cobro-${t.numero}">
-                                    <option value="false" ${!t.cobrado ? 'selected' : ''}>No</option>
-                                    <option value="true" ${t.cobrado ? 'selected' : ''}>Sí (Cobró)</option>
-                                </select>
-                            </td>
-                            <td><button class="btn-admin-save" onclick="guardarFilaAdmin(${t.numero})">Guardar</button></td>
-                        `;
-                        tbodyAdmin.appendChild(trAdm);
-                    });
-                }
+                cacheDataFirebase = data;
+                renderizarTablas(data);
             });
         }
 
-        // ACCIONES DEL ADMINISTRADOR
+        function renderizarTablas(data) {
+            // Fondo de Aguinaldo
+            document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
+            document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
+
+            // Calcular meses pagados totales del usuario logueado
+            let mesesPagadosUsuario = 0;
+            if (data.turnos) {
+                Object.values(data.turnos).forEach(t => {
+                    if(t.nombre.toLowerCase() === userEmailLogueado.toLowerCase() && t.pagosMeses) {
+                        Object.values(t.pagosMeses).forEach(status => {
+                            if(status === 'Pagado') mesesPagadosUsuario++;
+                        });
+                    }
+                });
+            }
+            document.getElementById('stat-mi-estado').textContent = `${mesesPagadosUsuario} / 18 Meses`;
+
+            const tbodyPublico = document.getElementById('tabla-turnos-publica');
+            tbodyPublico.innerHTML = "";
+            
+            const tbodyAdmin = document.getElementById('tabla-turnos-admin');
+            tbodyAdmin.innerHTML = "";
+
+            if (data.turnos) {
+                let listaOrdenada = Object.values(data.turnos).sort((a,b) => a.numero - b.numero);
+
+                listaOrdenada.forEach(t => {
+                    // Obtener pago del mes actual activo
+                    let estadoPagoMesActual = (t.pagosMeses && t.pagosMeses[`mes_${mesActualSeleccionado}`]) ? t.pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
+
+                    // 1. Render Tabla Pública
+                    let badgePago = estadoPagoMesActual === 'Pagado' ? '<span class="badge success">Al día</span>' : '<span class="badge danger">Pendiente</span>';
+                    let badgeCobro = t.cobrado ? '<span class="badge success">Sí (Pozo Entregado)</span>' : '<span class="badge warning">Ahorrando</span>';
+                    
+                    let trPub = document.createElement('tr');
+                    trPub.innerHTML = `<td><strong>Turno ${t.numero}</strong></td><td>${t.nombre}</td><td>${badgePago}</td><td>${badgeCobro}</td>`;
+                    tbodyPublico.appendChild(trPub);
+
+                    // 2. Render Tabla Admin
+                    let trAdm = document.createElement('tr');
+                    trAdm.innerHTML = `
+                        <td><strong>${t.numero}</strong></td>
+                        <td><input type="text" id="name-${t.numero}" value="${t.nombre}"></td>
+                        <td>
+                            <select id="pago-${t.numero}">
+                                <option value="Pendiente" ${estadoPagoMesActual === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="Pagado" ${estadoPagoMesActual === 'Pagado' ? 'selected' : ''}>Pagado</option>
+                            </select>
+                        </td>
+                        <td>
+                            <select id="cobro-${t.numero}">
+                                <option value="false" ${!t.cobrado ? 'selected' : ''}>No</option>
+                                <option value="true" ${t.cobrado ? 'selected' : ''}>Sí</option>
+                            </select>
+                        </td>
+                        <td><button class="btn-admin-save" onclick="guardarFilaAdmin(${t.numero})">Guardar</button></td>
+                    `;
+                    tbodyAdmin.appendChild(trAdm);
+                });
+            }
+        }
+
+        // GUARDAR DATOS DESDE EL PANEL
         function guardarFilaAdmin(numeroTurno) {
             const nuevoNombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const nuevoPago = document.getElementById(`pago-${numeroTurno}`).value;
             const nuevoCobro = document.getElementById(`cobro-${numeroTurno}`).value === "true";
 
-            db.ref(`pasanaku_v2/turnos/${numeroTurno}`).update({
-                nombre: nuevoNombre,
-                pago: nuevoPago,
-                cobrado: nuevoCobro
-            }).then(() => {
-                alert(`Turno ${numeroTurno} actualizado con éxito.`);
+            // Guardar el pago específicamente apuntando a la subcarpeta del mes seleccionado
+            let updates = {};
+            updates[`pasanaku_multimes/turnos/${numeroTurno}/nombre`] = nuevoNombre;
+            updates[`pasanaku_multimes/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
+            updates[`pasanaku_multimes/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
+
+            db.ref().update(updates).then(() => {
+                alert(`¡Turno ${numeroTurno} actualizado con éxito para el Mes ${mesActualSeleccionado}!`);
             });
         }
 
         function guardarAguinaldoGlobal() {
             const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
-            db.ref('pasanaku_v2/fondoAguinaldo').set(monto).then(() => {
-                alert("Monto del aguinaldo actualizado globalmente.");
+            db.ref('pasanaku_multimes/fondoAguinaldo').set(monto).then(() => {
+                alert("Bolsa de aguinaldo actualizada.");
             });
         }
 
         function agregarNuevoCasilleroTurno() {
-            db.ref('pasanaku_v2/turnos').once('value', (snapshot) => {
+            db.ref('pasanaku_multimes/turnos').once('value', (snapshot) => {
                 let totalActual = snapshot.numChildren() || 0;
                 let nuevoNumero = totalActual + 1;
                 
-                db.ref(`pasanaku_v2/turnos/${nuevoNumero}`).set({
+                // Crear los 18 meses por defecto para el participante nuevo
+                let pagosMeses = {};
+                for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
+
+                db.ref(`pasanaku_multimes/turnos/${nuevoNumero}`).set({
                     numero: nuevoNumero,
                     nombre: "Participante " + nuevoNumero,
-                    pago: "Pendiente",
+                    pagosMeses: pagosMeses,
                     cobrado: false
                 }).then(() => {
-                    alert(`¡Se ha añadido el Turno Número ${nuevoNumero} exitosamente!`);
+                    alert(`¡Se añadió el Turno Número ${nuevoNumero}!`);
                 });
             });
         }
