@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pasanaku Pro - Sistema de Ahorro</title>
-    <!-- Firebase Legacy SDKs (Fáciles de integrar en un solo archivo HTML) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -194,12 +193,10 @@
 
     <div class="container">
         
-        <!-- ================= AVISO MODO DEMO / CONFIG ================= -->
         <div id="config-notice" class="notice-banner">
-            🚀 <strong>Modo Demostración Activado (Local):</strong> Como no has enlazado tus claves reales de Firebase todavía, la app está simulando la base de datos usando la memoria de tu navegador. Para que tus amigos lo vean de forma sincronizada, edita este archivo e inserta tus credenciales de Google Firebase.
+            🚀 <strong>Modo Demostración Activado (Local):</strong> Cargando componentes... Si este mensaje no desaparece, verifica que tu base de datos de Firebase tenga las reglas de lectura/escritura en 'true'.
         </div>
 
-        <!-- ================= VISTA DE LOGIN / REGISTRO ================= -->
         <div id="view-auth" class="view card active">
             <h1>Pasanaku Digital 💸</h1>
             <p style="text-align: center;">Gestiona tus turnos, pagos y fondos comunes en tiempo real.</p>
@@ -220,37 +217,29 @@
             <button id="btn-toggle-auth" class="btn-secondary" onclick="conmutarAuthMode()">¿No tienes cuenta? Regístrate aquí</button>
         </div>
 
-        <!-- ================= VISTA DEL DASHBOARD PRINCIPAL ================= -->
         <div id="view-dashboard" class="view">
             
-            <!-- Barra de navegación del usuario -->
             <div class="header-actions">
                 <div class="user-info">👤 Hola, <span id="user-display-email">usuario@correo.com</span></div>
                 <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
 
-            <!-- Fila de Indicadores Clave -->
             <div class="dashboard-grid">
-                <!-- Requisito: Ver su estado -->
                 <div class="stat-card">
                     <h3>Mi Estado de Pago</h3>
                     <div id="stat-mi-estado" class="value danger">Pendiente</div>
                 </div>
-                <!-- Requisito: Ver el fondo aguinaldo -->
                 <div class="stat-card">
                     <h3>Fondo Aguinaldo Total</h3>
                     <div id="stat-fondo-aguinaldo" class="value success">0.00 Bs</div>
                 </div>
-                <!-- Información complementaria del Pasanaku -->
                 <div class="stat-card">
                     <h3>Mi Turno Asignado</h3>
                     <div id="stat-mi-turno" class="value">—</div>
                 </div>
             </div>
 
-            <!-- Fila Inferior: Listas e Historiales -->
             <div class="card">
-                <!-- Requisito: Vea quién cobró -->
                 <h2>Lista de Turnos y Cobros</h2>
                 <p>Orden oficial del sorteo del Pasanaku y estado de desembolso del pozo.</p>
                 <table class="data-table">
@@ -263,13 +252,11 @@
                         </tr>
                     </thead>
                     <tbody id="tabla-turnos-body">
-                        <!-- Render dinámico -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
             <div class="card">
-                <!-- Requisito: Vea su historial de pagos -->
                 <h2>Mi Historial Personal de Pagos</h2>
                 <p>Registro cronológico de tus aportaciones mensuales y fondos acumulados.</p>
                 <table class="data-table">
@@ -282,12 +269,10 @@
                         </tr>
                     </thead>
                     <tbody id="tabla-historial-body">
-                        <!-- Render dinámico -->
-                    </tbody>
+                        </tbody>
                 </table>
             </div>
 
-            <!-- PANEL DE SIMULACIÓN PARA PROBAR ANTES DE CONFIGURAR FIREBASE -->
             <div class="admin-zone" id="demo-admin-panel">
                 <h3 style="color: #92400e; margin-bottom: 10px;">🛠️ Panel de Control de Pruebas (Demo)</h3>
                 <p style="color: #92400e; font-size: 13px;">Usa estos controles para simular datos y ver cómo cambia la interfaz de inmediato para el usuario.</p>
@@ -303,10 +288,8 @@
 
     </div>
 
-    <!-- ================= LÓGICA DE JAVASCRIPT Y CONEXIÓN ================= -->
     <script>
-        // 1. CONFIGURACIÓN DE FIREBASE
-        // Reemplaza los siguientes datos con los de tu consola Firebase (Project Settings -> Web App)
+        // 1. CONFIGURACIÓN DE FIREBASE (Tus claves ya están asignadas correctamente)
         const firebaseConfig = {
             apiKey: "AIzaSyAka11ysInMa1x0eTJ5yQ7uolTnEzBknZ4",
             authDomain: "pasanaku-app-v01.firebaseapp.com",
@@ -314,21 +297,21 @@
             projectId: "pasanaku-app-v01",
             storageBucket: "pasanaku-app-v01.firebasestorage.app",
             messagingSenderId: "289532049455",
-            appId: "1:289532049455:web:f9d25dba19dd325236aeda"
+            appId: "1:289532049455:web:f9d25dba19dd325236aeda",
             measurementId: "G-SXZ2F0ZLGV"
         };
 
         let useFirebase = false;
-        let authMode = 'login'; // 'login' o 'register'
+        let authMode = 'login'; 
         let currentUser = null;
 
-        // Base de Datos en Estado Local/Demo por defecto
+        // Base de Datos Estructural por Defecto
         let stateDemo = {
             fondoAguinaldo: 350.00,
             turnos: [
                 { numero: 1, nombre: "Juan Carlos Choque", monto: 1200, cobrado: true },
                 { numero: 2, nombre: "Maria Elena Flores", monto: 1200, cobrado: false },
-                { numero: 3, nombre: "Tu Usuario (Actual)", monto: 1200, cobrado: false },
+                { numero: 3, nombre: "Participante Nuevo", monto: 1200, cobrado: false },
                 { numero: 4, nombre: "Pedro Quispe", monto: 1200, cobrado: false }
             ],
             usuarios: {
@@ -344,19 +327,20 @@
             }
         };
 
-        // Inicializar Firebase si el usuario configuró la clave real
-        if (firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
+        // Inicializar de forma segura
+        if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
             try {
                 firebase.initializeApp(firebaseConfig);
                 useFirebase = true;
                 document.getElementById('config-notice').style.display = 'none';
-                document.getElementById('demo-admin-panel').style.display = 'none'; // Se oculta el simulador si es real
+                document.getElementById('demo-admin-panel').style.display = 'none'; 
             } catch (e) {
-                console.error("Error al inicializar Firebase, usando modo demostración local.", e);
+                console.error("Error al conectar Firebase, iniciando en modo local de respaldo:", e);
+                document.getElementById('config-notice').innerHTML = "⚠️ <strong>Aviso:</strong> Conexión local activa. Si deseas conectar el servidor en la nube de Google, verifica las reglas de tu base de datos.";
             }
         }
 
-        // Monitorear cambios de autenticación (Solo si Firebase está activo)
+        // Monitorear cambios de sesión en la nube
         if (useFirebase) {
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
@@ -370,7 +354,7 @@
             });
         }
 
-        // 2. LOGICA DE AUTENTICACIÓN (LOGIN/REGISTRO)
+        // 2. AUTENTICACIÓN (LOGIN/REGISTRO)
         function conmutarAuthMode() {
             const title = document.getElementById('auth-title');
             const btnPrimary = document.getElementById('btn-primary-auth');
@@ -399,25 +383,23 @@
             }
 
             if (useFirebase) {
-                // Autenticación Real en Servidores de Google
                 if (authMode === 'login') {
                     firebase.auth().signInWithEmailAndPassword(email, password)
                         .catch(err => alert("Error de ingreso: " + err.message));
                 } else {
                     firebase.auth().createUserWithEmailAndPassword(email, password)
                         .then((result) => {
-                            // Inicializar datos del nuevo participante en la base de datos
-                            firebase.database().ref('usuarios/' + result.user.uid).set({
+                            // CORREGIDO: Guardar dentro de 'pasanaku/usuarios/' para unificar la base de datos
+                            firebase.database().ref('pasanaku/usuarios/' + result.user.uid).set({
                                 estadoPago: "Pendiente",
                                 turno: "Por asignar",
-                                historial: [{ fecha: new Date().toLocaleDateString(), concepto: "Registro de cuenta", monto: "0 Bs", estado: "Completado" }]
+                                historial: [{ fecha: new Date().toLocaleDateString(), concepto: "Registro de cuenta inicial", monto: "0 Bs", estado: "Completado" }]
                             });
-                            alert("¡Cuenta creada con éxito para el Pasanaku!");
+                            alert("¡Cuenta creada con éxito!");
                         })
                         .catch(err => alert("Error de registro: " + err.message));
                 }
             } else {
-                // Modo Simulación Local (Para pruebas rápidas sin configurar nada)
                 currentUser = { email: email };
                 mostrarDashboard(email);
             }
@@ -437,23 +419,19 @@
             document.getElementById(viewId).classList.add('active');
         }
 
-        // 3. RENDERIZADO Y ACTUALIZACIÓN DE DATOS EN PANTALLA
+        // 3. RENDERIZADO EN TIEMPO REAL
         function mostrarDashboard(email) {
             document.getElementById('user-display-email').textContent = email;
             cambiarVista('view-dashboard');
             
             if (!useFirebase) {
-                // Cargar datos estáticos del simulador
                 actualizarInterfazUI(stateDemo);
             }
         }
 
         function actualizarInterfazUI(data) {
-            // A. Fondo aguinaldo
-            document.getElementById('stat-fondo-aguinaldo').textContent = parseFloat(data.fondoAguinaldo).toFixed(2) + " Bs";
+            document.getElementById('stat-fondo-aguinaldo').textContent = parseFloat(data.fondoAguinaldo || 0).toFixed(2) + " Bs";
 
-            // B. Datos del participante logueado
-            // En modo demo usamos "mi_usuario_demo", en Firebase usamos el UID del usuario
             const userKey = useFirebase ? currentUser.uid : "mi_usuario_demo";
             const userData = data.usuarios && data.usuarios[userKey] ? data.usuarios[userKey] : { estadoPago: "Pendiente", turno: "Sin asignar", historial: [] };
 
@@ -467,7 +445,7 @@
 
             document.getElementById('stat-mi-turno').textContent = userData.turno;
 
-            // C. Tabla de Quién Cobró
+            // Tabla Quién Cobró
             const tbodyTurnos = document.getElementById('tabla-turnos-body');
             tbodyTurnos.innerHTML = '';
             if (data.turnos) {
@@ -486,7 +464,7 @@
                 });
             }
 
-            // D. Historial de Pagos
+            // Historial de Pagos
             const tbodyHistorial = document.getElementById('tabla-historial-body');
             tbodyHistorial.innerHTML = '';
             if (userData.historial) {
@@ -504,17 +482,20 @@
             }
         }
 
-        // Escucha en tiempo real de Firebase
+        // Sincronización e inicialización automática de base de datos vacía
         function escucharBaseDeDatosReal() {
             firebase.database().ref('pasanaku').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    actualizarInterfazUI(data);
+                let data = snapshot.val();
+                if (!data) {
+                    // Si tu consola Firebase está vacía en la nube, se crea la estructura por primera vez automáticamente
+                    firebase.database().ref('pasanaku').set(stateDemo);
+                    data = stateDemo;
                 }
+                actualizarInterfazUI(data);
             });
         }
 
-        // 4. FUNCIONES DEL PANEL DE CONTROL DE PRUEBAS (SIMULADOR DEMO)
+        // 4. CONTROLES DEL MODO DEMO LOCAL
         function demoSimularPago(esPagado) {
             stateDemo.usuarios["mi_usuario_demo"].estadoPago = esPagado ? "Al día" : "Pendiente";
             stateDemo.usuarios["mi_usuario_demo"].historial[2].estado = esPagado ? "Pagado" : "Pendiente";
