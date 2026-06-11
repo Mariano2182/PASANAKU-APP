@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pasanaku Pro - Sistema de Ahorro</title>
+    <!-- Firebase Legacy SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -21,275 +22,147 @@
             --warning: #f59e0b;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 900px;
-        }
-
-        /* Vistas (Ocultas por defecto) */
-        .view {
-            display: none;
-        }
-        .view.active {
-            display: block;
-        }
-
-        /* Tarjetas y Estilos de UI */
-        .card {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 950px; }
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        .card { background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h1 { font-size: 28px; color: var(--primary); margin-bottom: 10px; text-align: center; }
         h2 { font-size: 20px; margin-bottom: 15px; color: var(--text); border-left: 4px solid var(--primary); padding-left: 10px; }
         p { color: var(--text-light); margin-bottom: 20px; }
 
-        /* Formularios e Inputs */
-        .form-group {
-            margin-bottom: 18px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
-        }
-
-        /* Botones */
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: var(--primary-hover); }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 16px; }
         
-        .btn-secondary {
-            background-color: transparent;
-            color: var(--primary);
-            border: 1px solid var(--primary);
-            margin-top: 10px;
-        }
-        .btn-secondary:hover { background-color: rgba(4, 120, 87, 0.05); }
+        button { padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; width: 100%; }
 
-        /* Alertas de Configuración de Firebase */
-        .notice-banner {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            color: #1e40af;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        /* Grid del Dashboard */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .stat-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            text-align: center;
-        }
-        .stat-card h3 { font-size: 14px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
-        .stat-card .value { font-size: 24px; font-weight: bold; margin-top: 10px; color: var(--text); }
-        .stat-card .value.success { color: var(--success); }
-        .stat-card .value.danger { color: var(--danger); }
-
-        /* Listas y Tablas */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        .data-table th, .data-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; }
+        .stat-card h3 { font-size: 14px; color: var(--text-light); text-transform: uppercase; }
+        .stat-card .value { font-size: 24px; font-weight: bold; margin-top: 10px; }
+        
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
         .data-table th { background-color: #f9fafb; font-weight: 600; }
 
-        .badge {
-            padding: 4px 8px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 600;
-        }
+        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; cursor: pointer; }
         .badge.success { background: #d1fae5; color: #065f46; }
         .badge.danger { background: #fee2e2; color: #991b1b; }
         .badge.warning { background: #fef3c7; color: #92400e; }
 
-        .header-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            background: var(--card-bg);
-            padding: 15px 25px;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
-        .user-info { font-weight: 600; color: var(--text); }
+        .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 15px 25px; border-radius: 12px; }
         .btn-logout { width: auto; padding: 8px 16px; background-color: #374151; font-size: 14px; }
-        .btn-logout:hover { background-color: #1f2937; }
 
-        .admin-zone {
-            margin-top: 30px;
-            border: 2px dashed var(--warning);
-            padding: 20px;
-            border-radius: 12px;
-            background: #fffbeb;
-        }
+        /* Panel de Admin Estilizado */
+        .admin-box { border: 2px solid var(--primary); background: #f0fdf4; display: none; }
+        .admin-table input { padding: 6px; font-size: 14px; }
+        .btn-admin-save { background-color: #0284c7; font-size: 14px; padding: 6px 12px; width: auto; }
+        .btn-add-player { background-color: #7c3aed; margin-bottom: 15px; width: auto; padding: 10px 20px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        
-        <div id="config-notice" class="notice-banner">
-            🚀 <strong>Modo Demostración Activado (Local):</strong> Cargando componentes... Si este mensaje no desaparece, verifica que tu base de datos de Firebase tenga las reglas de lectura/escritura en 'true'.
-        </div>
 
+        <!-- ================= LOGIN / REGISTRO ================= -->
         <div id="view-auth" class="view card active">
             <h1>Pasanaku Digital 💸</h1>
-            <p style="text-align: center;">Gestiona tus turnos, pagos y fondos comunes en tiempo real.</p>
-            
+            <p style="text-align: center;">Gestión de turnos y cobros en tiempo real.</p>
             <h2 id="auth-title">Iniciar Sesión</h2>
-            
             <div class="form-group">
-                <label for="auth-email">Correo Electrónico:</label>
+                <label>Correo Electrónico:</label>
                 <input type="email" id="auth-email" placeholder="ejemplo@correo.com">
             </div>
-            
             <div class="form-group">
-                <label for="auth-password">Contraseña:</label>
+                <label>Contraseña:</label>
                 <input type="password" id="auth-password" placeholder="Mínimo 6 caracteres">
             </div>
-            
-            <button id="btn-primary-auth" onclick="procesarAutenticacion()">Ingresar</button>
+            <button style="width:100%" id="btn-primary-auth" onclick="procesarAutenticacion()">Ingresar</button>
             <button id="btn-toggle-auth" class="btn-secondary" onclick="conmutarAuthMode()">¿No tienes cuenta? Regístrate aquí</button>
         </div>
 
+        <!-- ================= DASHBOARD PRINCIPAL ================= -->
         <div id="view-dashboard" class="view">
-            
             <div class="header-actions">
-                <div class="user-info">👤 Hola, <span id="user-display-email">usuario@correo.com</span></div>
+                <div class="user-info">👤 Usuario: <span id="user-display-email">...</span></div>
                 <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
 
             <div class="dashboard-grid">
                 <div class="stat-card">
                     <h3>Mi Estado de Pago</h3>
-                    <div id="stat-mi-estado" class="value danger">Pendiente</div>
+                    <div id="stat-mi-estado" class="value" style="color:var(--danger)">Pendiente</div>
                 </div>
                 <div class="stat-card">
                     <h3>Fondo Aguinaldo Total</h3>
-                    <div id="stat-fondo-aguinaldo" class="value success">0.00 Bs</div>
+                    <div id="stat-fondo-aguinaldo" class="value" style="color:var(--success)">$0.00</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Mi Turno Asignado</h3>
-                    <div id="stat-mi-turno" class="value">—</div>
+                    <h3>Valor de la Cuota</h3>
+                    <div class="value" style="color:var(--text)">$6.000</div>
                 </div>
             </div>
 
+            <!-- TABLA GENERAL DE TURNOS (VISTA DE TODOS) -->
             <div class="card">
-                <h2>Lista de Turnos y Cobros</h2>
-                <p>Orden oficial del sorteo del Pasanaku y estado de desembolso del pozo.</p>
+                <h2>Lista Oficial de Turnos y Estados</h2>
+                <p>Monto del Pozo mensual a cobrar por turno: <strong>$108.000 ARS</strong></p>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Turno / Mes</th>
+                            <th>Turno</th>
                             <th>Participante</th>
-                            <th>Monto Pozo</th>
-                            <th>Estado de Cobro</th>
+                            <th>Aporte Mes</th>
+                            <th>Estado del Pozo</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-turnos-body">
-                        </tbody>
+                    <tbody id="tabla-turnos-publica">
+                        <!-- Carga desde Firebase -->
+                    </tbody>
                 </table>
             </div>
 
-            <div class="card">
-                <h2>Mi Historial Personal de Pagos</h2>
-                <p>Registro cronológico de tus aportaciones mensuales y fondos acumulados.</p>
-                <table class="data-table">
+            <!-- ================= PANEL EXCLUSIVO DEL ADMINISTRADOR ================= -->
+            <div id="panel-administrador" class="card admin-box">
+                <h2>🛠️ Panel de Control (Organizador)</h2>
+                <p>Modifica los nombres, pagos y añade nuevos casilleros si se suma más gente.</p>
+                
+                <div class="form-group" style="max-width: 300px; display: flex; gap: 10px; align-items: flex-end;">
+                    <div>
+                        <label>Monto Fondo Aguinaldo ($):</label>
+                        <input type="number" id="admin-input-aguinaldo" value="0">
+                    </div>
+                    <button class="btn-admin-save" onclick="guardarAguinaldoGlobal()">Actualizar Bolsa</button>
+                </div>
+
+                <button class="btn-add-player" onclick="agregarNuevoCasilleroTurno()">➕ Agregar Participante / Turno Extra</button>
+
+                <table class="data-table admin-table">
                     <thead>
                         <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
+                            <th>N° Turno</th>
+                            <th>Nombre del Participante</th>
+                            <th>¿Pagó Cuota?</th>
+                            <th>¿Cobró el Pozo?</th>
+                            <th>Acción</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-historial-body">
-                        </tbody>
+                    <tbody id="tabla-turnos-admin">
+                        <!-- Filas de edición -->
+                    </tbody>
                 </table>
-            </div>
-
-            <div class="admin-zone" id="demo-admin-panel">
-                <h3 style="color: #92400e; margin-bottom: 10px;">🛠️ Panel de Control de Pruebas (Demo)</h3>
-                <p style="color: #92400e; font-size: 13px;">Usa estos controles para simular datos y ver cómo cambia la interfaz de inmediato para el usuario.</p>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button style="background: #b45309; width: auto; font-size: 13px; padding: 8px 12px;" onclick="demoSimularPago(true)">Simular Cuota Pagada</button>
-                    <button style="background: #b45309; width: auto; font-size: 13px; padding: 8px 12px;" onclick="demoSimularPago(false)">Simular Cuota Pendiente</button>
-                    <button style="background: #b45309; width: auto; font-size: 13px; padding: 8px 12px;" onclick="demoIncrementarAguinaldo()">Aumentar Fondo Aguinaldo (+50 Bs)</button>
-                    <button style="background: #7c2d12; width: auto; font-size: 13px; padding: 8px 12px;" onclick="demoCambiarCobro(1)">Marcar Turno 1 como Cobrado</button>
-                </div>
             </div>
 
         </div>
-
     </div>
 
     <script>
-        // 1. CONFIGURACIÓN DE FIREBASE (Tus claves ya están asignadas correctamente)
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAka11ysInMa1x0eTJ5yQ7uolTnEzBknZ4",
             authDomain: "pasanaku-app-v01.firebaseapp.com",
@@ -301,219 +174,172 @@
             measurementId: "G-SXZ2F0ZLGV"
         };
 
-        let useFirebase = false;
-        let authMode = 'login'; 
-        let currentUser = null;
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let authMode = 'login';
+        let userEmailLogueado = "";
 
-        // Base de Datos Estructural por Defecto
-        let stateDemo = {
-            fondoAguinaldo: 350.00,
-            turnos: [
-                { numero: 1, nombre: "Juan Carlos Choque", monto: 1200, cobrado: true },
-                { numero: 2, nombre: "Maria Elena Flores", monto: 1200, cobrado: false },
-                { numero: 3, nombre: "Participante Nuevo", monto: 1200, cobrado: false },
-                { numero: 4, nombre: "Pedro Quispe", monto: 1200, cobrado: false }
-            ],
-            usuarios: {
-                "mi_usuario_demo": {
-                    estadoPago: "Pendiente",
-                    turno: 3,
-                    historial: [
-                        { fecha: "10/04/2026", concepto: "Cuota Mes 1 - Pasanaku", monto: "300.00 Bs", estado: "Pagado" },
-                        { fecha: "10/05/2026", concepto: "Cuota Mes 2 - Pasanaku", monto: "300.00 Bs", estado: "Pagado" },
-                        { fecha: "Aún no depositado", concepto: "Cuota Mes 3 - Pasanaku", monto: "300.00 Bs", estado: "Pendiente" }
-                    ]
-                }
-            }
-        };
-
-        // Inicializar de forma segura
-        if (typeof firebase !== 'undefined' && firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                useFirebase = true;
-                document.getElementById('config-notice').style.display = 'none';
-                document.getElementById('demo-admin-panel').style.display = 'none'; 
-            } catch (e) {
-                console.error("Error al conectar Firebase, iniciando en modo local de respaldo:", e);
-                document.getElementById('config-notice').innerHTML = "⚠️ <strong>Aviso:</strong> Conexión local activa. Si deseas conectar el servidor en la nube de Google, verifica las reglas de tu base de datos.";
-            }
-        }
-
-        // Monitorear cambios de sesión en la nube
-        if (useFirebase) {
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    currentUser = user;
-                    mostrarDashboard(user.email);
-                    escucharBaseDeDatosReal();
+        // Al iniciar, escuchar estado del usuario
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                userEmailLogueado = user.email;
+                document.getElementById('user-display-email').textContent = userEmailLogueado;
+                
+                // Mostrar panel de admin si eres tú
+                if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
+                    document.getElementById('panel-administrador').style.display = "block";
                 } else {
-                    currentUser = null;
-                    cambiarVista('view-auth');
+                    document.getElementById('panel-administrador').style.display = "none";
                 }
-            });
-        }
 
-        // 2. AUTENTICACIÓN (LOGIN/REGISTRO)
-        function conmutarAuthMode() {
-            const title = document.getElementById('auth-title');
-            const btnPrimary = document.getElementById('btn-primary-auth');
-            const btnToggle = document.getElementById('btn-toggle-auth');
-
-            if (authMode === 'login') {
-                authMode = 'register';
-                title.textContent = 'Registrar Nuevo Participante';
-                btnPrimary.textContent = 'Crear Cuenta';
-                btnToggle.textContent = '¿Ya tienes cuenta? Inicia sesión';
+                cambiarVista('view-dashboard');
+                activarSincronizacionFirebase();
             } else {
-                authMode = 'login';
-                title.textContent = 'Iniciar Sesión';
-                btnPrimary.textContent = 'Ingresar';
-                btnToggle.textContent = '¿No tienes cuenta? Regístrate aquí';
+                cambiarVista('view-auth');
             }
+        });
+
+        function conmutarAuthMode() {
+            authMode = (authMode === 'login') ? 'register' : 'login';
+            document.getElementById('auth-title').textContent = authMode === 'login' ? 'Iniciar Sesión' : 'Registrar Nuevo Participante';
+            document.getElementById('btn-primary-auth').textContent = authMode === 'login' ? 'Ingresar' : 'Crear Cuenta';
+            document.getElementById('btn-toggle-auth').textContent = authMode === 'login' ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión';
         }
 
         function procesarAutenticacion() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
 
-            if (!email || !password || password.length < 6) {
-                alert("Por favor introduce un correo válido y una contraseña de mínimo 6 caracteres.");
-                return;
-            }
+            if (!email || !password) { alert("Completa todos los campos"); return; }
 
-            if (useFirebase) {
-                if (authMode === 'login') {
-                    firebase.auth().signInWithEmailAndPassword(email, password)
-                        .catch(err => alert("Error de ingreso: " + err.message));
-                } else {
-                    firebase.auth().createUserWithEmailAndPassword(email, password)
-                        .then((result) => {
-                            // CORREGIDO: Guardar dentro de 'pasanaku/usuarios/' para unificar la base de datos
-                            firebase.database().ref('pasanaku/usuarios/' + result.user.uid).set({
-                                estadoPago: "Pendiente",
-                                turno: "Por asignar",
-                                historial: [{ fecha: new Date().toLocaleDateString(), concepto: "Registro de cuenta inicial", monto: "0 Bs", estado: "Completado" }]
-                            });
-                            alert("¡Cuenta creada con éxito!");
-                        })
-                        .catch(err => alert("Error de registro: " + err.message));
-                }
+            if (authMode === 'login') {
+                firebase.auth().signInWithEmailAndPassword(email, password).catch(e => alert("Error: " + e.message));
             } else {
-                currentUser = { email: email };
-                mostrarDashboard(email);
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then(() => alert("¡Cuenta creada exitosamente!"))
+                    .catch(e => alert("Error al registrar: " + e.message));
             }
         }
 
-        function cerrarSesion() {
-            if (useFirebase) {
-                firebase.auth().signOut();
-            } else {
-                currentUser = null;
-                cambiarVista('view-auth');
-            }
-        }
+        function cerrarSesion() { firebase.auth().signOut(); }
+        function cambiarVista(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        function cambiarVista(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
-        }
-
-        // 3. RENDERIZADO EN TIEMPO REAL
-        function mostrarDashboard(email) {
-            document.getElementById('user-display-email').textContent = email;
-            cambiarVista('view-dashboard');
-            
-            if (!useFirebase) {
-                actualizarInterfazUI(stateDemo);
-            }
-        }
-
-        function actualizarInterfazUI(data) {
-            document.getElementById('stat-fondo-aguinaldo').textContent = parseFloat(data.fondoAguinaldo || 0).toFixed(2) + " Bs";
-
-            const userKey = useFirebase ? currentUser.uid : "mi_usuario_demo";
-            const userData = data.usuarios && data.usuarios[userKey] ? data.usuarios[userKey] : { estadoPago: "Pendiente", turno: "Sin asignar", historial: [] };
-
-            const elEstado = document.getElementById('stat-mi-estado');
-            elEstado.textContent = userData.estadoPago;
-            if (userData.estadoPago === 'Al día' || userData.estadoPago === 'Pagado') {
-                elEstado.className = "value success";
-            } else {
-                elEstado.className = "value danger";
-            }
-
-            document.getElementById('stat-mi-turno').textContent = userData.turno;
-
-            // Tabla Quién Cobró
-            const tbodyTurnos = document.getElementById('tabla-turnos-body');
-            tbodyTurnos.innerHTML = '';
-            if (data.turnos) {
-                data.turnos.forEach(t => {
-                    const tr = document.createElement('tr');
-                    const badgeClass = t.cobrado ? 'success' : 'warning';
-                    const badgeText = t.cobrado ? '✅ Cobrado' : '⏳ Pendiente de Entrega';
-                    
-                    tr.innerHTML = `
-                        <td><strong>Turno ${t.numero}</strong></td>
-                        <td>${t.nombre}</td>
-                        <td>${t.monto} Bs</td>
-                        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
-                    `;
-                    tbodyTurnos.appendChild(tr);
-                });
-            }
-
-            // Historial de Pagos
-            const tbodyHistorial = document.getElementById('tabla-historial-body');
-            tbodyHistorial.innerHTML = '';
-            if (userData.historial) {
-                userData.historial.forEach(h => {
-                    const tr = document.createElement('tr');
-                    const badgeStyle = h.estado === 'Pagado' || h.estado === 'Completado' ? 'success' : 'danger';
-                    tr.innerHTML = `
-                        <td>${h.fecha}</td>
-                        <td>${h.concepto}</td>
-                        <td><strong>${h.monto}</strong></td>
-                        <td><span class="badge ${badgeStyle}">${h.estado}</span></td>
-                    `;
-                    tbodyHistorial.appendChild(tr);
-                });
-            }
-        }
-
-        // Sincronización e inicialización automática de base de datos vacía
-        function escucharBaseDeDatosReal() {
-            firebase.database().ref('pasanaku').on('value', (snapshot) => {
+        // SINCRONIZACIÓN Y CREACIÓN DE LOS 18 CASILLEROS INICIALES
+        function activarSincronizacionFirebase() {
+            db.ref('pasanaku_v2').on('value', (snapshot) => {
                 let data = snapshot.val();
+                
+                // Si la base de datos está vacía, creamos los 18 casilleros iniciales automáticamente
                 if (!data) {
-                    // Si tu consola Firebase está vacía en la nube, se crea la estructura por primera vez automáticamente
-                    firebase.database().ref('pasanaku').set(stateDemo);
-                    data = stateDemo;
+                    let turnosIniciales = {};
+                    for(let i=1; i<=18; i++) {
+                        turnosIniciales[i] = { numero: i, nombre: "Participante " + i, pago: "Pendiente", cobrado: false };
+                    }
+                    db.ref('pasanaku_v2').set({
+                        fondoAguinaldo: 0,
+                        turnos: turnosIniciales
+                    });
+                    return;
                 }
-                actualizarInterfazUI(data);
+
+                // Renderizar Datos Generales
+                document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
+                document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
+
+                // Buscar el estado de pago del usuario logueado en la lista de turnos
+                let miEstado = "Pendiente (Sin turno asignado)";
+                if (data.turnos) {
+                    Object.values(data.turnos).forEach(t => {
+                        if(t.nombre.toLowerCase() === userEmailLogueado.toLowerCase()) {
+                            miEstado = t.pago === "Pagado" ? "Al día ✅" : "Pendiente ⏳";
+                        }
+                    });
+                }
+                document.getElementById('stat-mi-estado').textContent = miEstado;
+                document.getElementById('stat-mi-estado').style.color = miEstado.includes("día") ? "var(--success)" : "var(--danger)";
+
+                // Renderizar Tabla Pública
+                const tbodyPublico = document.getElementById('tabla-turnos-publica');
+                tbodyPublico.innerHTML = "";
+                
+                // Renderizar Tabla de Administración
+                const tbodyAdmin = document.getElementById('tabla-turnos-admin');
+                tbodyAdmin.innerHTML = "";
+
+                if (data.turnos) {
+                    // Ordenar por número de turno
+                    let listaOrdenada = Object.values(data.turnos).sort((a,b) => a.numero - b.numero);
+
+                    listaOrdenada.forEach(t => {
+                        // 1. Llenar tabla pública
+                        let badgePago = t.pago === 'Pagado' ? '<span class="badge success">Al día</span>' : '<span class="badge danger">Pendiente</span>';
+                        let badgeCobro = t.cobrado ? '<span class="badge success">Pozo Entregado</span>' : '<span class="badge warning">Ahorrando</span>';
+                        
+                        let trPub = document.createElement('tr');
+                        trPub.innerHTML = `<td><strong>Turno ${t.numero}</strong></td><td>${t.nombre}</td><td>${badgePago}</td><td>${badgeCobro}</td>`;
+                        tbodyPublico.appendChild(trPub);
+
+                        // 2. Llenar tabla de administración
+                        let trAdm = document.createElement('tr');
+                        trAdm.innerHTML = `
+                            <td><strong>${t.numero}</strong></td>
+                            <td><input type="text" id="name-${t.numero}" value="${t.nombre}"></td>
+                            <td>
+                                <select id="pago-${t.numero}">
+                                    <option value="Pendiente" ${t.pago === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                    <option value="Pagado" ${t.pago === 'Pagado' ? 'selected' : ''}>Pagado</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select id="cobro-${t.numero}">
+                                    <option value="false" ${!t.cobrado ? 'selected' : ''}>No</option>
+                                    <option value="true" ${t.cobrado ? 'selected' : ''}>Sí (Cobró)</option>
+                                </select>
+                            </td>
+                            <td><button class="btn-admin-save" onclick="guardarFilaAdmin(${t.numero})">Guardar</button></td>
+                        `;
+                        tbodyAdmin.appendChild(trAdm);
+                    });
+                }
             });
         }
 
-        // 4. CONTROLES DEL MODO DEMO LOCAL
-        function demoSimularPago(esPagado) {
-            stateDemo.usuarios["mi_usuario_demo"].estadoPago = esPagado ? "Al día" : "Pendiente";
-            stateDemo.usuarios["mi_usuario_demo"].historial[2].estado = esPagado ? "Pagado" : "Pendiente";
-            stateDemo.usuarios["mi_usuario_demo"].historial[2].fecha = esPagado ? new Date().toLocaleDateString() : "Aún no depositado";
-            actualizarInterfazUI(stateDemo);
+        // ACCIONES DEL ADMINISTRADOR
+        function guardarFilaAdmin(numeroTurno) {
+            const nuevoNombre = document.getElementById(`name-${numeroTurno}`).value.trim();
+            const nuevoPago = document.getElementById(`pago-${numeroTurno}`).value;
+            const nuevoCobro = document.getElementById(`cobro-${numeroTurno}`).value === "true";
+
+            db.ref(`pasanaku_v2/turnos/${numeroTurno}`).update({
+                nombre: nuevoNombre,
+                pago: nuevoPago,
+                cobrado: nuevoCobro
+            }).then(() => {
+                alert(`Turno ${numeroTurno} actualizado con éxito.`);
+            });
         }
 
-        function demoIncrementarAguinaldo() {
-            stateDemo.fondoAguinaldo += 50;
-            actualizarInterfazUI(stateDemo);
+        function guardarAguinaldoGlobal() {
+            const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
+            db.ref('pasanaku_v2/fondoAguinaldo').set(monto).then(() => {
+                alert("Monto del aguinaldo actualizado globalmente.");
+            });
         }
 
-        function demoCambiarCobro(turnoNum) {
-            const index = stateDemo.turnos.findIndex(t => t.numero === turnoNum);
-            if(index !== -1) {
-                stateDemo.turnos[index].cobrado = true;
-                actualizarInterfazUI(stateDemo);
-            }
+        function agregarNuevoCasilleroTurno() {
+            db.ref('pasanaku_v2/turnos').once('value', (snapshot) => {
+                let totalActual = snapshot.numChildren() || 0;
+                let nuevoNumero = totalActual + 1;
+                
+                db.ref(`pasanaku_v2/turnos/${nuevoNumero}`).set({
+                    numero: nuevoNumero,
+                    nombre: "Participante " + nuevoNumero,
+                    pago: "Pendiente",
+                    cobrado: false
+                }).then(() => {
+                    alert(`¡Se ha añadido el Turno Número ${nuevoNumero} exitosamente!`);
+                });
+            });
         }
     </script>
 </body>
