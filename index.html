@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasanaku Pro - MultiGrupo & Pagos</title>
+    <title>Pasanaku Pro - Sistema Multi-Grupo</title>
     <!-- Firebase Legacy SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -54,13 +54,10 @@
         .selector-box-card label { color: #166534; font-weight: bold; }
         .selector-box-card select { border-color: #86efac; font-weight: bold; color: #166534; }
 
-        /* Caja de pago rápido del usuario */
         .pay-zone-card { background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border: 2px dashed #f59e0b; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; display: none; }
         .pay-buttons-flex { display: flex; gap: 15px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
         .btn-pay-mp { background-color: var(--mp); font-size: 14px; padding: 10px 20px; }
-        .btn-pay-mp:hover { background-color: #007cb5; }
         .btn-pay-alias { background-color: #4b5563; font-size: 14px; padding: 10px 20px; }
-        .btn-pay-alias:hover { background-color: #374151; }
 
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
@@ -78,12 +75,10 @@
         .admin-table input { padding: 6px; font-size: 13px; margin-bottom: 4px; width: 100%; border: 1px solid #ccc; border-radius: 4px; }
         .btn-admin-save { background-color: #0284c7; font-size: 13px; padding: 6px 10px; width: auto; }
         .btn-whatsapp { background-color: var(--whatsapp); font-size: 13px; padding: 6px 10px; width: auto; margin-left: 4px; }
-        .btn-whatsapp:hover { background-color: var(--whatsapp-hover); }
         .btn-add-player { background-color: #7c3aed; margin-bottom: 15px; width: auto; padding: 10px 20px; }
 
         .log-container { background: #fafafa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 13px; }
         .log-line { padding: 6px 0; border-bottom: 1px dashed #e5e7eb; color: #374151; }
-        .log-line:first-child { font-weight: bold; color: #000; }
         
         .creator-container { display: flex; gap: 10px; align-items: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
         .admin-config-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9; }
@@ -93,10 +88,10 @@
 
     <div class="container">
 
-        <!-- ================= LOGIN / REGISTRO ================= -->
+        <!-- ================= VISTA DE AUTENTICACIÓN ================= -->
         <div id="view-auth" class="view card active">
             <h1>Pasanaku Digital 💸</h1>
-            <p style="text-align: center;">Gestión multi-grupo de turnos, cobros y pasarela de pago rápido.</p>
+            <p style="text-align: center;">Gestión de múltiples grupos independientes en tiempo real.</p>
             <h2 id="auth-title">Iniciar Sesión</h2>
             <div class="form-group">
                 <label>Correo Electrónico:</label>
@@ -110,43 +105,41 @@
             <button id="btn-toggle-auth" class="btn-secondary" onclick="conmutarAuthMode()">¿No tienes cuenta? Regístrate aquí</button>
         </div>
 
-        <!-- ================= DASHBOARD PRINCIPAL ================= -->
+        <!-- ================= VISTA PANEL PRINCIPAL ================= -->
         <div id="view-dashboard" class="view">
             <div class="header-actions">
                 <div class="user-info">👤 Usuario: <span id="user-display-email">...</span></div>
                 <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
 
-            <!-- SELECTORES GLOBALES (GRUPO Y MES) -->
+            <!-- CONTROLES MULTI-GRUPO Y CALENDARIO -->
             <div class="selector-box-card">
                 <div>
-                    <label for="selector-grupo-global">👥 Seleccionar Grupo Pasanaku:</label>
+                    <label for="selector-grupo-global">👥 Seleccionar Grupo Activo:</label>
                     <select id="selector-grupo-global" onchange="cambiarGrupoActivo()">
-                        <!-- Cargado dinámicamente -->
+                        <!-- Se llena dinámicamente desde Firebase -->
                     </select>
                     
                     <div id="admin-group-creator" class="creator-container" style="display:none;">
                         <div style="flex-grow: 1;">
-                            <input type="text" id="new-group-name" placeholder="Ej: Pasanaku Familia" style="padding: 6px; font-size:14px;">
+                            <input type="text" id="new-group-name" placeholder="Ej: Pasanaku Fútbol / Familia" style="padding: 6px; font-size:14px;">
                         </div>
-                        <button onclick="crearNuevoGrupoPasanaku()" style="font-size:13px; padding:6px 12px; background-color:#16a34a;">✨ Crear Grupo</button>
+                        <button onclick="crearNuevoGrupoPasanaku()" style="font-size:13px; padding:6px 12px; background-color:#16a34a;">✨ Crear Nuevo Grupo</button>
                     </div>
                 </div>
                 <div>
                     <label for="selector-mes-global">📅 Calendario del Grupo:</label>
                     <select id="selector-mes-global" onchange="cambiarMesGlobal()">
-                        <!-- Del 1 al 18 -->
+                        <!-- Meses del 1 al 18 -->
                     </select>
                 </div>
             </div>
 
-            <!-- VENTANA DINÁMICA DE COBRO PARA EL USUARIO LOGUEADO -->
+            <!-- VENTANA DE PAGO RÁPIDO PARA PARTICIPANTES -->
             <div id="user-pay-zone" class="pay-zone-card">
-                <h3 style="color:#b45309; font-size: 18px; margin-bottom: 5px;">💳 Módulo de Pago Express</h3>
-                <p id="text-user-pay-status" style="margin-bottom:0; font-size:15px; color:#1f2937;">Tienes una cuota pendiente de <strong>$6.000 ARS</strong> para este mes.</p>
-                <div class="pay-buttons-flex" id="container-pay-buttons">
-                    <!-- Se inyectan dinámicamente los botones configurados por el administrador -->
-                </div>
+                <h3 style="color:#b45309; font-size: 18px; margin-bottom: 5px;">💳 Canales de Pago del Grupo</h3>
+                <p id="text-user-pay-status" style="margin-bottom:0; font-size:15px; color:#1f2937;">Cargando datos de pago...</p>
+                <div class="pay-buttons-flex" id="container-pay-buttons"></div>
             </div>
 
             <div class="dashboard-grid">
@@ -155,80 +148,75 @@
                     <div id="stat-mi-estado" class="value" style="color:var(--primary)">Buscando...</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Fondo Aguinaldo Grupo</h3>
+                    <h3>Bolsa de Aguinaldo acumulada</h3>
                     <div id="stat-fondo-aguinaldo" class="value" style="color:var(--success)">$0.00</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Valor de la Cuota</h3>
+                    <h3>Valor de Cuota Total</h3>
                     <div class="value" style="color:var(--text)">$6.000</div>
                 </div>
             </div>
 
-            <!-- TABLA GENERAL DE TURNOS -->
+            <!-- TABLA PÚBLICA -->
             <div class="card">
                 <h2>Lista Oficial: <span id="text-grupo-titulo" style="color: var(--primary);">...</span> - <span id="text-mes-titulo" style="color: var(--primary);">Mes 1</span></h2>
-                <p>Monto estimado a cobrar por el dueño del turno este mes: <strong>$108.000 ARS</strong></p>
+                <p>Monto líquido a cobrar por el dueño del pozo este mes: <strong id="text-pozo-estimado" style="color: #10b981;">$90.000 ARS</strong></p>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Turno</th>
                             <th>Participante</th>
-                            <th>Aporte en este Mes</th>
-                            <th>¿Ya le tocó el Pozo?</th>
+                            <th>Estado Pago</th>
+                            <th>¿Cobró el Pozo?</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-turnos-publica">
-                        <!-- Carga desde Firebase -->
-                    </tbody>
+                    <tbody id="tabla-turnos-publica"></tbody>
                 </table>
             </div>
 
-            <!-- ================= PANEL EXCLUSIVO DEL ADMINISTRADOR ================= -->
+            <!-- PANEL ADMINISTRADOR (SOLO MARIANO) -->
             <div id="panel-administrador" class="card admin-box">
-                <h2>🛠️ Panel de Control (Organizador)</h2>
-                <p style="margin-bottom: 15px;">Configura los canales de cobro de este grupo y audita las transacciones.</p>
+                <h2>🛠️ Panel de Control (Organizador General)</h2>
+                <p style="margin-bottom: 15px;">Ajustes de tesorería y asignación de turnos. Al marcar como "Pagado" se suman automáticamente $1.000 al aguinaldo.</p>
                 
-                <!-- Ajustes de Tesorería del Grupo -->
                 <div class="admin-config-row">
                     <div>
-                        <label style="color:#1b5e20;">Fondo Aguinaldo ($):</label>
+                        <label>Auditoría manual Aguinaldo ($):</label>
                         <input type="number" id="admin-input-aguinaldo" value="0">
                     </div>
                     <div>
-                        <label style="color:#1b5e20;">Alias o CVU de Cobro:</label>
+                        <label>Alias / CVU de Cobro:</label>
                         <input type="text" id="admin-input-alias" placeholder="ejemplo.mp.alias">
                     </div>
                     <div>
-                        <label style="color:#1b5e20;">Link de Pago MercadoPago:</label>
+                        <label>Link de Mercado Pago:</label>
                         <input type="text" id="admin-input-linkpago" placeholder="https://mpago.la/...">
                     </div>
                     <div style="display:flex; align-items:flex-end;">
-                        <button class="btn-admin-save" onclick="guardarConfiguracionGlobalGrupo()" style="width:100%; background-color:#2e7d32; padding:11px;">💾 Guardar Caja</button>
+                        <button class="btn-admin-save" onclick="guardarConfiguracionGlobalGrupo()" style="width:100%; background-color:#2e7d32; padding:11px;">💾 Forzar Ajustes Caja</button>
                     </div>
                 </div>
 
-                <button class="btn-add-player" onclick="agregarNuevoCasilleroTurno()">➕ Agregar Participante / Turno Extra</button>
+                <button class="btn-add-player" onclick="agregarNuevoCasilleroTurno()">➕ Agregar Turno / Casillero Extra</button>
 
                 <table class="data-table admin-table">
                     <thead>
                         <tr>
                             <th>N°</th>
                             <th style="width: 40%;">Datos del Participante</th>
-                            <th>Pago Mes</th>
-                            <th>¿Cobró?</th>
+                            <th>Pago ($6.000)</th>
+                            <th>¿Cobró Pozo?</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="tabla-turnos-admin">
-                        <!-- Filas de edición -->
-                    </tbody>
+                    <tbody id="tabla-turnos-admin"></tbody>
                 </table>
             </div>
 
-            <!-- ================= LIBRO DE ACTAS DIGITAL ================= -->
+            <!-- LIBRO DE ACTAS DIGITAL -->
             <div class="card">
                 <h2>📝 Libro de Actas Digital (<span id="text-historial-grupo-dinamico">...</span>)</h2>
-                <p>Registro histórico de movimientos exclusivo de este grupo.</p>
+                <p>Historial transparente exclusivo de las acciones de este grupo.</p>
                 <div class="log-container" id="libro-de-actas">
                     <div class="log-line">Cargando historial de auditoría...</div>
                 </div>
@@ -238,7 +226,6 @@
     </div>
 
     <script>
-        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAka11ysInMa1x0eTJ5yQ7uolTnEzBknZ4",
             authDomain: "pasanaku-app-v01.firebaseapp.com",
@@ -259,7 +246,6 @@
         let idGrupoSeleccionado = "";
         let cacheGrupoData = null;
 
-        // Generar selector de meses (1 al 18)
         const selectorMes = document.getElementById('selector-mes-global');
         for (let m = 1; m <= 18; m++) {
             let opt = document.createElement('option');
@@ -268,7 +254,6 @@
             selectorMes.appendChild(opt);
         }
 
-        // Monitorear Autenticación
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 userEmailLogueado = user.email;
@@ -283,13 +268,13 @@
                 }
 
                 cambiarVista('view-dashboard');
-                inicializarEstructuraMultiGrupo();
+                cargarListadoDeGrupos();
             } else {
                 cambiarVista('view-auth');
             }
         });
 
-        function inicializarEstructuraMultiGrupo() {
+        function cargarListadoDeGrupos() {
             db.ref('pasanaku_v5/grupos').on('value', (snapshot) => {
                 const selectorGrupo = document.getElementById('selector-grupo-global');
                 selectorGrupo.innerHTML = "";
@@ -297,9 +282,9 @@
                 
                 if(!dataGrupos) {
                     if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
-                        ejecutarCreacionGrupo("Pasanaku Inicial Tradicional");
+                        ejecutarCreacionGrupo("Pasanaku Amigos Tradicional");
                     } else {
-                        document.getElementById('text-grupo-titulo').textContent = "Esperando que el administrador cree un grupo...";
+                        document.getElementById('text-grupo-titulo').textContent = "Esperando asignación de grupo...";
                     }
                     return;
                 }
@@ -307,7 +292,7 @@
                 Object.keys(dataGrupos).forEach(idKey => {
                     let opt = document.createElement('option');
                     opt.value = idKey;
-                    opt.textContent = dataGrupos[idKey].nombre || "Grupo Sin Nombre";
+                    opt.textContent = dataGrupos[idKey].nombre || "Grupo sin nombre";
                     selectorGrupo.appendChild(opt);
                 });
 
@@ -316,11 +301,11 @@
                 }
 
                 selectorGrupo.value = idGrupoSeleccionado;
-                conectarConGrupoActivo();
+                enlazarDatosGrupoActivo();
             });
         }
 
-        function conectarConGrupoActivo() {
+        function enlazarDatosGrupoActivo() {
             if(!idGrupoSeleccionado) return;
 
             db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}`).off();
@@ -334,7 +319,7 @@
                 document.getElementById('text-grupo-titulo').textContent = data.nombre;
                 document.getElementById('text-historial-grupo-dinamico').textContent = data.nombre;
                 
-                renderizarTablas(data);
+                renderizarTablasYMetricas(data);
             });
 
             db.ref(`pasanaku_v5/historial/${idGrupoSeleccionado}`).orderByChild('timestamp').on('value', (snapshot) => {
@@ -345,7 +330,7 @@
                 logs.reverse();
 
                 if(logs.length === 0) {
-                    cajaActas.innerHTML = `<div class="log-line">Sin movimientos en este grupo.</div>`;
+                    cajaActas.innerHTML = `<div class="log-line" style="color:var(--text-light)">Sin movimientos asentados en este grupo.</div>`;
                 } else {
                     logs.forEach(logText => {
                         let div = document.createElement('div');
@@ -377,29 +362,28 @@
                 turnos: turnosIniciales
             }).then(() => {
                 idGrupoSeleccionado = nuevoId;
-                generarLineaHistorial(`Mariano creó el grupo "${nombreGrupo}" en la plataforma.`);
+                generarLineaHistorial(`Mariano creó el grupo "${nombreGrupo}".`);
             });
         }
 
         function crearNuevoGrupoPasanaku() {
             const inputNombre = document.getElementById('new-group-name');
             const nombre = inputNombre.value.trim();
-            if(!nombre) { alert("Escribe un nombre para el nuevo grupo"); return; }
+            if(!nombre) { alert("Por favor ingresá un nombre válido."); return; }
             ejecutarCreacionGrupo(nombre);
             inputNombre.value = "";
-            alert(`¡Grupo "${nombre}" creado!`);
+            alert(`¡Grupo "${nombre}" creado con éxito!`);
         }
 
         function cambiarGrupoActivo() {
             idGrupoSeleccionado = document.getElementById('selector-grupo-global').value;
-            conectarConGrupoActivo();
+            enlazarDatosGrupoActivo();
         }
 
         function cambiarMesGlobal() {
             mesActualSeleccionado = parseInt(document.getElementById('selector-mes-global').value);
             document.getElementById('text-mes-titulo').textContent = `Mes ${mesActualSeleccionado}`;
-            document.getElementById('text-mes-admin').textContent = `Mes ${mesActualSeleccionado}`;
-            if(cacheGrupoData) renderizarTablas(cacheGrupoData);
+            if(cacheGrupoData) renderizarTablasYMetricas(cacheGrupoData);
         }
 
         function generarLineaHistorial(textoAccion) {
@@ -415,17 +399,20 @@
             });
         }
 
-        function renderizarTablas(data) {
+        function renderizarTablasYMetricas(data) {
             document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
-            
-            // Rellenar inputs del administrador
             document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
             document.getElementById('admin-input-alias').value = data.aliasCobro || "";
             document.getElementById('admin-input-linkpago').value = data.linkPago || "";
 
+            // Calcular pozo dinámico del mes ($5.000 por cada participante registrado en el grupo)
+            let totalTurnosActivos = data.turnos ? Object.keys(data.turnos).length : 18;
+            let valorPozoLiquido = totalTurnosActivos * 5000;
+            document.getElementById('text-pozo-estimado').textContent = "$" + valorPozoLiquido.toLocaleString('es-AR') + " ARS";
+
             let miEstadoString = "Sin turno asignado";
             let mesesPagadosUsuario = 0;
-            let estadoPagoActualUsuario = "Desconocido";
+            let estadoPagoActualUsuario = "Pendiente";
             
             if (data.turnos) {
                 Object.values(data.turnos).forEach(t => {
@@ -440,13 +427,12 @@
             }
             document.getElementById('stat-mi-estado').textContent = miEstadoString;
 
-            // MANEJO DEL MÓDULO VISUAL DE PAGO EXPRESS
             const payZone = document.getElementById('user-pay-zone');
             const containerButtons = document.getElementById('container-pay-buttons');
             const textPayStatus = document.getElementById('text-user-pay-status');
 
             if(miEstadoString === "Sin turno asignado" || userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
-                payZone.style.display = "none"; // Ocultar para admin o no asignados
+                payZone.style.display = "none";
             } else {
                 payZone.style.display = "block";
                 containerButtons.innerHTML = "";
@@ -454,40 +440,35 @@
                 if(estadoPagoActualUsuario === "Pagado") {
                     payZone.style.background = "linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%)";
                     payZone.style.borderColor = "var(--success)";
-                    textPayStatus.innerHTML = "🎉 <strong>¡Estás al día este mes!</strong> Muchas gracias por tu aporte.";
+                    textPayStatus.innerHTML = "🎉 <strong>¡Estás al día este mes!</strong> Tu cuota de $6.000 fue procesada ($5.000 al pozo y $1.000 a tu aguinaldo).";
                 } else {
                     payZone.style.background = "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)";
                     payZone.style.borderColor = "var(--warning)";
-                    textPayStatus.innerHTML = `Tienes una cuota pendiente de <strong>$6.000 ARS</strong> para el <strong>Mes ${mesActualSeleccionado}</strong>. Elige cómo abonar:`;
+                    textPayStatus.innerHTML = `Tenés una cuota pendiente de <strong>$6.000 ARS</strong> para el <strong>Mes ${mesActualSeleccionado}</strong> ($5.000 pozo + $1.000 aguinaldo de retención). Elegí el método:`;
                     
-                    // Botón Mercado Pago si está configurado
                     if(data.linkPago) {
                         let btnMp = document.createElement('button');
                         btnMp.className = "btn-pay-mp";
-                        btnMp.innerHTML = "💙 Pagar por Mercado Pago";
+                        btnMp.innerHTML = "💙 Pagar con Mercado Pago";
                         btnMp.onclick = () => { window.open(data.linkPago, '_blank'); };
                         containerButtons.appendChild(btnMp);
                     }
-                    
-                    // Botón Alias si está configurado
                     if(data.aliasCobro) {
                         let btnAlias = document.createElement('button');
                         btnAlias.className = "btn-pay-alias";
                         btnAlias.innerHTML = "📋 Copiar Alias / CVU";
                         btnAlias.onclick = () => {
                             navigator.clipboard.writeText(data.aliasCobro);
-                            alert(`¡Alias "${data.aliasCobro}" copiado al portapapeles!\nAbre tu home banking o billetera virtual y pega el código para transferir.`);
+                            alert(`¡Alias "${data.aliasCobro}" copiado!\nPegalo en tu billetera virtual para hacer la transferencia.`);
                         };
                         containerButtons.appendChild(btnAlias);
                     }
-
                     if(!data.linkPago && !data.aliasCobro) {
-                        containerButtons.innerHTML = "<small style='color:var(--text-light)'>El organizador aún no configuró los datos de la billetera virtual.</small>";
+                        containerButtons.innerHTML = "<small style='color:var(--text-light)'>El organizador aún no configuró las cuentas para este grupo.</small>";
                     }
                 }
             }
 
-            // TABLAS PÚBLICAS Y ADMIN
             const tbodyPublico = document.getElementById('tabla-turnos-publica');
             tbodyPublico.innerHTML = "";
             const tbodyAdmin = document.getElementById('tabla-turnos-admin');
@@ -510,9 +491,9 @@
                     trAdm.innerHTML = `
                         <td><strong>${t.numero}</strong></td>
                         <td>
-                            <input type="text" id="name-${t.numero}" value="${t.nombre}" placeholder="Nombre Completo">
-                            <input type="email" id="email-${t.numero}" value="${t.email || ''}" placeholder="Correo de Registro">
-                            <input type="text" id="phone-${t.numero}" value="${t.telefono || ''}" placeholder="WhatsApp (Ej: 5491133445566)">
+                            <input type="text" id="name-${t.numero}" value="${t.nombre}" placeholder="Nombre">
+                            <input type="email" id="email-${t.numero}" value="${t.email || ''}" placeholder="Correo">
+                            <input type="text" id="phone-${t.numero}" value="${t.telefono || ''}" placeholder="WhatsApp">
                         </td>
                         <td>
                             <select id="pago-${t.numero}">
@@ -528,7 +509,7 @@
                         </td>
                         <td style="white-space: nowrap;">
                             <button class="btn-admin-save" onclick="guardarFilaAdmin(${t.numero})">💾</button>
-                            <button class="btn-whatsapp" onclick="enviarReciboWhatsApp(${t.numero})">💬 Recibo</button>
+                            <button class="btn-whatsapp" onclick="enviarReciboWhatsApp(${t.numero})">💬</button>
                         </td>
                     `;
                     tbodyAdmin.appendChild(trAdm);
@@ -536,7 +517,6 @@
             }
         }
 
-        // GUARDAR AJUSTES DE RECAUDACIÓN (ADMIN)
         function guardarConfiguracionGlobalGrupo() {
             const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
             const alias = document.getElementById('admin-input-alias').value.trim();
@@ -548,8 +528,8 @@
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/linkPago`] = link;
 
             db.ref().update(updates).then(() => {
-                generarLineaHistorial(`Mariano actualizó los datos de recaudación y caja del grupo.`);
-                alert("Datos de cobro y aguinaldo actualizados globalmente.");
+                generarLineaHistorial(`Mariano forzó un ajuste manual en la caja del grupo.`);
+                alert("Ajustes globales guardados.");
             });
         }
 
@@ -562,6 +542,7 @@
 
             let estadoPrevioPago = cacheGrupoData.turnos[numeroTurno].pagosMeses ? cacheGrupoData.turnos[numeroTurno].pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
             let estadoPrevioCobro = cacheGrupoData.turnos[numeroTurno].cobrado;
+            let actualFondoAguinaldo = parseFloat(cacheGrupoData.fondoAguinaldo || 0);
 
             let updates = {};
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/nombre`] = nuevoNombre;
@@ -570,15 +551,25 @@
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
 
+            // RULOS DE AUTOMATIZACIÓN DE VALORES INTEGRADAS
+            if (estadoPrevioPago !== "Pagado" && nuevoPago === "Pagado") {
+                actualFondoAguinaldo += 1000;
+                updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = actualFondoAguinaldo;
+                generarLineaHistorial(`Mariano cobró los $6.000 de ${nuevoNombre} (Mes ${mesActualSeleccionado}). $1.000 ingresados al Aguinaldo.`);
+            } else if (estadoPrevioPago === "Pagado" && nuevoPago !== "Pagado") {
+                actualFondoAguinaldo = Math.max(0, actualFondoAguinaldo - 1000);
+                updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = actualFondoAguinaldo;
+                generarLineaHistorial(`Mariano revirtió pago de ${nuevoNombre} (Mes ${mesActualSeleccionado}). Se descontaron $1.000 del Aguinaldo.`);
+            } else if (!estadoPrevioCobro && nuevoCobro) {
+                let totalTurnos = Object.keys(cacheGrupoData.turnos).length;
+                let pozoEntrega = totalTurnos * 5000;
+                generarLineaHistorial(`Mariano registró la entrega del Pozo retenido de $${pozoEntrega.toLocaleString('es-AR')} ARS a ${nuevoNombre}.`);
+            } else {
+                generarLineaHistorial(`Mariano editó datos técnicos del Turno ${numeroTurno}.`);
+            }
+
             db.ref().update(updates).then(() => {
-                if (estadoPrevioPago !== "Pagado" && nuevoPago === "Pagado") {
-                    generarLineaHistorial(`Mariano confirmó el pago de $6.000 de ${nuevoNombre} (Mes ${mesActualSeleccionado}).`);
-                } else if (!estadoPrevioCobro && nuevoCobro) {
-                    generarLineaHistorial(`Mariano registró la entrega del Pozo mensual de $108.000 ARS a ${nuevoNombre}.`);
-                } else {
-                    generarLineaHistorial(`Mariano actualizó la ficha del Turno ${numeroTurno} (${nuevoNombre}).`);
-                }
-                alert(`Cambios guardados.`);
+                alert(`Ficha del participante guardada con éxito.`);
             });
         }
 
@@ -586,18 +577,18 @@
             const nombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const telefono = document.getElementById(`phone-${numeroTurno}`).value.trim();
             
-            const mensaje = `¡Hola ${nombre}! Tu pago de $6.000 para el Turno ${numeroTurno} (Mes ${mesActualSeleccionado}) en el grupo "${cacheGrupoData.nombre}" ya fue registrado en la app. Saldo total del pozo: $108.000.`;
-            const mensajeCodificado = encodeURIComponent(mensaje);
-            
-            let urlWhatsApp = telefono ? `https://wa.me/${telefono}?text=${mensajeCodificado}` : `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
-            window.open(urlWhatsApp, '_blank');
+            let totalTurnos = Object.keys(cacheGrupoData.turnos).length;
+            let pozoEntrega = totalTurnos * 5000;
+
+            const mensaje = `¡Hola ${nombre}! Tu cuota de $6.000 para el Turno ${numeroTurno} (Mes ${mesActualSeleccionado}) en el grupo "${cacheGrupoData.nombre}" fue recibida y guardada. $5.000 se sumaron al pozo mensual ($${pozoEntrega.toLocaleString('es-AR')}) y $1.000 se reservaron para tu fondo de Aguinaldo final. 🏆`;
+            const url = telefono ? `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
         }
 
         function agregarNuevoCasilleroTurno() {
             db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos`).once('value', (snapshot) => {
                 let totalActual = snapshot.numChildren() || 0;
                 let nuevoNumero = totalActual + 1;
-                
                 let pagosMeses = {};
                 for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
 
@@ -609,8 +600,8 @@
                     pagosMeses: pagosMeses,
                     cobrado: false
                 }).then(() => {
-                    generarLineaHistorial(`Mariano expandió el grupo creando el Turno Número ${nuevoNumero}.`);
-                    alert(`¡Turno ${nuevoNumero} añadido!`);
+                    generarLineaHistorial(`Mariano expandió la estructura agregando el Turno N° ${nuevoNumero}.`);
+                    alert(`¡Turno ${nuevoNumero} incorporado con éxito!`);
                 });
             });
         }
@@ -618,14 +609,12 @@
         function procesarAutenticacion() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
-            if (!email || !password) { alert("Completa todos los campos"); return; }
+            if (!email || !password) { alert("Completa los datos requeridos."); return; }
 
             if (authMode === 'login') {
                 firebase.auth().signInWithEmailAndPassword(email, password).catch(e => alert("Error: " + e.message));
             } else {
-                firebase.auth().createUserWithEmailAndPassword(email, password)
-                    .then(() => alert("¡Cuenta creada!"))
-                    .catch(e => alert("Error al registrar: " + e.message));
+                firebase.auth().createUserWithEmailAndPassword(email, password).then(() => alert("¡Registro completado!")).catch(e => alert("Error: " + e.message));
             }
         }
 
