@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasanaku Pro - Sistema de Ahorro</title>
+    <title>Pasanaku Pro - MultiGrupo & Pagos</title>
     <!-- Firebase Legacy SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -22,6 +22,7 @@
             --warning: #f59e0b;
             --whatsapp: #25d366;
             --whatsapp-hover: #128c7e;
+            --mp: #009ee3;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
@@ -48,9 +49,18 @@
         .stat-card h3 { font-size: 14px; color: var(--text-light); text-transform: uppercase; }
         .stat-card .value { font-size: 24px; font-weight: bold; margin-top: 10px; }
         
-        .selector-mes-card { background: #e0f2fe; border: 1px solid #bae6fd; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; }
-        .selector-mes-card label { margin-bottom: 0; font-size: 16px; color: #0369a1; }
-        .selector-mes-card select { width: auto; min-width: 150px; padding: 8px; border-color: #7dd3fc; font-weight: bold; color: #0369a1; }
+        .selector-box-card { background: #f0fdf4; border: 1px solid #bbf7d0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        @media(max-width: 600px) { .selector-box-card { grid-template-columns: 1fr; } }
+        .selector-box-card label { color: #166534; font-weight: bold; }
+        .selector-box-card select { border-color: #86efac; font-weight: bold; color: #166534; }
+
+        /* Caja de pago rápido del usuario */
+        .pay-zone-card { background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%); border: 2px dashed #f59e0b; border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; display: none; }
+        .pay-buttons-flex { display: flex; gap: 15px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+        .btn-pay-mp { background-color: var(--mp); font-size: 14px; padding: 10px 20px; }
+        .btn-pay-mp:hover { background-color: #007cb5; }
+        .btn-pay-alias { background-color: #4b5563; font-size: 14px; padding: 10px 20px; }
+        .btn-pay-alias:hover { background-color: #374151; }
 
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
@@ -74,6 +84,9 @@
         .log-container { background: #fafafa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; max-height: 250px; overflow-y: auto; font-family: monospace; font-size: 13px; }
         .log-line { padding: 6px 0; border-bottom: 1px dashed #e5e7eb; color: #374151; }
         .log-line:first-child { font-weight: bold; color: #000; }
+        
+        .creator-container { display: flex; gap: 10px; align-items: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
+        .admin-config-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9; }
     </style>
 </head>
 <body>
@@ -83,7 +96,7 @@
         <!-- ================= LOGIN / REGISTRO ================= -->
         <div id="view-auth" class="view card active">
             <h1>Pasanaku Digital 💸</h1>
-            <p style="text-align: center;">Gestión de turnos, cobros y notificaciones automatizadas.</p>
+            <p style="text-align: center;">Gestión multi-grupo de turnos, cobros y pasarela de pago rápido.</p>
             <h2 id="auth-title">Iniciar Sesión</h2>
             <div class="form-group">
                 <label>Correo Electrónico:</label>
@@ -104,21 +117,45 @@
                 <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
 
-            <!-- FILTRO DE MES GLOBAL -->
-            <div class="selector-mes-card">
-                <label for="selector-mes-global"><strong>📅 Calendario del Pasanaku:</strong> Selecciona el mes que deseas revisar o cobrar:</label>
-                <select id="selector-mes-global" onchange="cambiarMesGlobal()">
-                    <!-- Se genera dinámicamente del 1 al 18 -->
-                </select>
+            <!-- SELECTORES GLOBALES (GRUPO Y MES) -->
+            <div class="selector-box-card">
+                <div>
+                    <label for="selector-grupo-global">👥 Seleccionar Grupo Pasanaku:</label>
+                    <select id="selector-grupo-global" onchange="cambiarGrupoActivo()">
+                        <!-- Cargado dinámicamente -->
+                    </select>
+                    
+                    <div id="admin-group-creator" class="creator-container" style="display:none;">
+                        <div style="flex-grow: 1;">
+                            <input type="text" id="new-group-name" placeholder="Ej: Pasanaku Familia" style="padding: 6px; font-size:14px;">
+                        </div>
+                        <button onclick="crearNuevoGrupoPasanaku()" style="font-size:13px; padding:6px 12px; background-color:#16a34a;">✨ Crear Grupo</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="selector-mes-global">📅 Calendario del Grupo:</label>
+                    <select id="selector-mes-global" onchange="cambiarMesGlobal()">
+                        <!-- Del 1 al 18 -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- VENTANA DINÁMICA DE COBRO PARA EL USUARIO LOGUEADO -->
+            <div id="user-pay-zone" class="pay-zone-card">
+                <h3 style="color:#b45309; font-size: 18px; margin-bottom: 5px;">💳 Módulo de Pago Express</h3>
+                <p id="text-user-pay-status" style="margin-bottom:0; font-size:15px; color:#1f2937;">Tienes una cuota pendiente de <strong>$6.000 ARS</strong> para este mes.</p>
+                <div class="pay-buttons-flex" id="container-pay-buttons">
+                    <!-- Se inyectan dinámicamente los botones configurados por el administrador -->
+                </div>
             </div>
 
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <h3>Mi Turno e Historial</h3>
+                    <h3>Mi Turno en este Grupo</h3>
                     <div id="stat-mi-estado" class="value" style="color:var(--primary)">Buscando...</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Fondo Aguinaldo Total</h3>
+                    <h3>Fondo Aguinaldo Grupo</h3>
                     <div id="stat-fondo-aguinaldo" class="value" style="color:var(--success)">$0.00</div>
                 </div>
                 <div class="stat-card">
@@ -127,10 +164,10 @@
                 </div>
             </div>
 
-            <!-- TABLA GENERAL DE TURNOS (VISTA DE TODOS) -->
+            <!-- TABLA GENERAL DE TURNOS -->
             <div class="card">
-                <h2>Lista Oficial de Estados - <span id="text-mes-titulo" style="color: var(--primary);">Mes 1</span></h2>
-                <p>Monto total estimado a cobrar por el dueño del turno este mes: <strong>$108.000 ARS</strong></p>
+                <h2>Lista Oficial: <span id="text-grupo-titulo" style="color: var(--primary);">...</span> - <span id="text-mes-titulo" style="color: var(--primary);">Mes 1</span></h2>
+                <p>Monto estimado a cobrar por el dueño del turno este mes: <strong>$108.000 ARS</strong></p>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -149,14 +186,25 @@
             <!-- ================= PANEL EXCLUSIVO DEL ADMINISTRADOR ================= -->
             <div id="panel-administrador" class="card admin-box">
                 <h2>🛠️ Panel de Control (Organizador)</h2>
-                <p>Modifica la asignación, vincula correos y envía recibos del <strong id="text-mes-admin" style="color: var(--primary);">Mes 1</strong>.</p>
+                <p style="margin-bottom: 15px;">Configura los canales de cobro de este grupo y audita las transacciones.</p>
                 
-                <div class="form-group" style="max-width: 300px; display: flex; gap: 10px; align-items: flex-end;">
+                <!-- Ajustes de Tesorería del Grupo -->
+                <div class="admin-config-row">
                     <div>
-                        <label>Monto Fondo Aguinaldo ($):</label>
+                        <label style="color:#1b5e20;">Fondo Aguinaldo ($):</label>
                         <input type="number" id="admin-input-aguinaldo" value="0">
                     </div>
-                    <button class="btn-admin-save" onclick="guardarAguinaldoGlobal()">Actualizar Bolsa</button>
+                    <div>
+                        <label style="color:#1b5e20;">Alias o CVU de Cobro:</label>
+                        <input type="text" id="admin-input-alias" placeholder="ejemplo.mp.alias">
+                    </div>
+                    <div>
+                        <label style="color:#1b5e20;">Link de Pago MercadoPago:</label>
+                        <input type="text" id="admin-input-linkpago" placeholder="https://mpago.la/...">
+                    </div>
+                    <div style="display:flex; align-items:flex-end;">
+                        <button class="btn-admin-save" onclick="guardarConfiguracionGlobalGrupo()" style="width:100%; background-color:#2e7d32; padding:11px;">💾 Guardar Caja</button>
+                    </div>
                 </div>
 
                 <button class="btn-add-player" onclick="agregarNuevoCasilleroTurno()">➕ Agregar Participante / Turno Extra</button>
@@ -177,10 +225,10 @@
                 </table>
             </div>
 
-            <!-- ================= LIBRO DE ACTAS DIGITAL (PÚBLICO) ================= -->
+            <!-- ================= LIBRO DE ACTAS DIGITAL ================= -->
             <div class="card">
-                <h2>📝 Libro de Actas Digital (Historial de Caja)</h2>
-                <p>Registro histórico e inalterable de movimientos del grupo.</p>
+                <h2>📝 Libro de Actas Digital (<span id="text-historial-grupo-dinamico">...</span>)</h2>
+                <p>Registro histórico de movimientos exclusivo de este grupo.</p>
                 <div class="log-container" id="libro-de-actas">
                     <div class="log-line">Cargando historial de auditoría...</div>
                 </div>
@@ -204,12 +252,14 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
         let authMode = 'login';
         let userEmailLogueado = "";
         let mesActualSeleccionado = 1;
-        let cacheDataFirebase = null;
+        let idGrupoSeleccionado = "";
+        let cacheGrupoData = null;
 
-        // Generar opciones del selector de meses (1 al 18)
+        // Generar selector de meses (1 al 18)
         const selectorMes = document.getElementById('selector-mes-global');
         for (let m = 1; m <= 18; m++) {
             let opt = document.createElement('option');
@@ -226,82 +276,68 @@
                 
                 if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
                     document.getElementById('panel-administrador').style.display = "block";
+                    document.getElementById('admin-group-creator').style.display = "flex";
                 } else {
                     document.getElementById('panel-administrador').style.display = "none";
+                    document.getElementById('admin-group-creator').style.display = "none";
                 }
 
                 cambiarVista('view-dashboard');
-                activarSincronizacionFirebase();
+                inicializarEstructuraMultiGrupo();
             } else {
                 cambiarVista('view-auth');
             }
         });
 
-        function conmutarAuthMode() {
-            authMode = (authMode === 'login') ? 'register' : 'login';
-            document.getElementById('auth-title').textContent = authMode === 'login' ? 'Iniciar Sesión' : 'Registrar Nuevo Participante';
-            document.getElementById('btn-primary-auth').textContent = authMode === 'login' ? 'Ingresar' : 'Crear Cuenta';
-            document.getElementById('btn-toggle-auth').textContent = authMode === 'login' ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión';
-        }
-
-        function procesarAutenticacion() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value;
-            if (!email || !password) { alert("Completa todos los campos"); return; }
-
-            if (authMode === 'login') {
-                firebase.auth().signInWithEmailAndPassword(email, password).catch(e => alert("Error: " + e.message));
-            } else {
-                firebase.auth().createUserWithEmailAndPassword(email, password)
-                    .then(() => alert("¡Cuenta creada exitosamente!"))
-                    .catch(e => alert("Error al registrar: " + e.message));
-            }
-        }
-
-        function cerrarSesion() { firebase.auth().signOut(); }
-        function cambiarVista(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-
-        function cambiarMesGlobal() {
-            mesActualSeleccionado = parseInt(document.getElementById('selector-mes-global').value);
-            document.getElementById('text-mes-titulo').textContent = `Mes ${mesActualSeleccionado}`;
-            document.getElementById('text-mes-admin').textContent = `Mes ${mesActualSeleccionado}`;
-            if(cacheDataFirebase) renderizarTablas(cacheDataFirebase);
-        }
-
-        function generarLineaHistorial(textoAccion) {
-            const ahora = new Date();
-            const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const hora = telemetryHora = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-            const logCompleto = `📝 ${fecha} ${hora} - ${textoAccion}`;
-            
-            db.ref('pasanaku_multimes/historial').push({
-                texto: logCompleto,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            });
-        }
-
-        // ESCUCHAR CAMBIOS EN TIEMPO REAL
-        function activarSincronizacionFirebase() {
-            db.ref('pasanaku_multimes').on('value', (snapshot) => {
-                let data = snapshot.val();
+        function inicializarEstructuraMultiGrupo() {
+            db.ref('pasanaku_v5/grupos').on('value', (snapshot) => {
+                const selectorGrupo = document.getElementById('selector-grupo-global');
+                selectorGrupo.innerHTML = "";
+                let dataGrupos = snapshot.val();
                 
-                // Inicializar base de datos con campos de vinculación si está vacía
-                if (!data) {
-                    let turnosIniciales = {};
-                    for(let i=1; i<=18; i++) {
-                        let pagosMeses = {};
-                        for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
-                        turnosIniciales[i] = { numero: i, nombre: "Participante " + i, email: "", telefono: "", pagosMeses: pagosMeses, cobrado: false };
+                if(!dataGrupos) {
+                    if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
+                        ejecutarCreacionGrupo("Pasanaku Inicial Tradicional");
+                    } else {
+                        document.getElementById('text-grupo-titulo').textContent = "Esperando que el administrador cree un grupo...";
                     }
-                    db.ref('pasanaku_multimes').set({ fondoAguinaldo: 0, turnos: turnosIniciales });
                     return;
                 }
 
-                cacheDataFirebase = data;
+                Object.keys(dataGrupos).forEach(idKey => {
+                    let opt = document.createElement('option');
+                    opt.value = idKey;
+                    opt.textContent = dataGrupos[idKey].nombre || "Grupo Sin Nombre";
+                    selectorGrupo.appendChild(opt);
+                });
+
+                if(!idGrupoSeleccionado && selectorGrupo.options.length > 0) {
+                    idGrupoSeleccionado = selectorGrupo.options[0].value;
+                }
+
+                selectorGrupo.value = idGrupoSeleccionado;
+                conectarConGrupoActivo();
+            });
+        }
+
+        function conectarConGrupoActivo() {
+            if(!idGrupoSeleccionado) return;
+
+            db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}`).off();
+            db.ref(`pasanaku_v5/historial/${idGrupoSeleccionado}`).off();
+
+            db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}`).on('value', (snapshot) => {
+                let data = snapshot.val();
+                if(!data) return;
+                cacheGrupoData = data;
+                
+                document.getElementById('text-grupo-titulo').textContent = data.nombre;
+                document.getElementById('text-historial-grupo-dinamico').textContent = data.nombre;
+                
                 renderizarTablas(data);
             });
 
-            db.ref('pasanaku_multimes/historial').orderByChild('timestamp').on('value', (snapshot) => {
+            db.ref(`pasanaku_v5/historial/${idGrupoSeleccionado}`).orderByChild('timestamp').on('value', (snapshot) => {
                 const cajaActas = document.getElementById('libro-de-actas');
                 cajaActas.innerHTML = "";
                 let logs = [];
@@ -309,7 +345,7 @@
                 logs.reverse();
 
                 if(logs.length === 0) {
-                    cajaActas.innerHTML = `<div class="log-line">Aún no se registran movimientos en el sistema.</div>`;
+                    cajaActas.innerHTML = `<div class="log-line">Sin movimientos en este grupo.</div>`;
                 } else {
                     logs.forEach(logText => {
                         let div = document.createElement('div');
@@ -321,20 +357,82 @@
             });
         }
 
+        function ejecutarCreacionGrupo(nombreGrupo) {
+            let nuevoGrupoRef = db.ref('pasanaku_v5/grupos').push();
+            let nuevoId = nuevoGrupoRef.key;
+
+            let turnosIniciales = {};
+            for(let i=1; i<=18; i++) {
+                let pagosMeses = {};
+                for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
+                turnosIniciales[i] = { numero: i, nombre: "Participante " + i, email: "", telefono: "", pagosMeses: pagosMeses, cobrado: false };
+            }
+
+            nuevoGrupoRef.set({
+                id: nuevoId,
+                nombre: nombreGrupo,
+                fondoAguinaldo: 0,
+                aliasCobro: "",
+                linkPago: "",
+                turnos: turnosIniciales
+            }).then(() => {
+                idGrupoSeleccionado = nuevoId;
+                generarLineaHistorial(`Mariano creó el grupo "${nombreGrupo}" en la plataforma.`);
+            });
+        }
+
+        function crearNuevoGrupoPasanaku() {
+            const inputNombre = document.getElementById('new-group-name');
+            const nombre = inputNombre.value.trim();
+            if(!nombre) { alert("Escribe un nombre para el nuevo grupo"); return; }
+            ejecutarCreacionGrupo(nombre);
+            inputNombre.value = "";
+            alert(`¡Grupo "${nombre}" creado!`);
+        }
+
+        function cambiarGrupoActivo() {
+            idGrupoSeleccionado = document.getElementById('selector-grupo-global').value;
+            conectarConGrupoActivo();
+        }
+
+        function cambiarMesGlobal() {
+            mesActualSeleccionado = parseInt(document.getElementById('selector-mes-global').value);
+            document.getElementById('text-mes-titulo').textContent = `Mes ${mesActualSeleccionado}`;
+            document.getElementById('text-mes-admin').textContent = `Mes ${mesActualSeleccionado}`;
+            if(cacheGrupoData) renderizarTablas(cacheGrupoData);
+        }
+
+        function generarLineaHistorial(textoAccion) {
+            if(!idGrupoSeleccionado) return;
+            const ahora = new Date();
+            const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const hora = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const logCompleto = `📝 ${fecha} ${hora} - ${textoAccion}`;
+            
+            db.ref(`pasanaku_v5/historial/${idGrupoSeleccionado}`).push({
+                texto: logCompleto,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+        }
+
         function renderizarTablas(data) {
             document.getElementById('stat-fondo-aguinaldo').textContent = "$" + parseFloat(data.fondoAguinaldo || 0).toLocaleString('es-AR') + " ARS";
+            
+            // Rellenar inputs del administrador
             document.getElementById('admin-input-aguinaldo').value = data.fondoAguinaldo || 0;
+            document.getElementById('admin-input-alias').value = data.aliasCobro || "";
+            document.getElementById('admin-input-linkpago').value = data.linkPago || "";
 
-            // BÚSQUEDA INTELIGENTE DE VINCULACIÓN DE CUENTA
             let miEstadoString = "Sin turno asignado";
             let mesesPagadosUsuario = 0;
+            let estadoPagoActualUsuario = "Desconocido";
             
             if (data.turnos) {
                 Object.values(data.turnos).forEach(t => {
-                    // Vincula si el email coincide con el guardado por el administrador
                     if(t.email && t.email.toLowerCase().trim() === userEmailLogueado.toLowerCase().trim()) {
                         if(t.pagosMeses) {
                             Object.values(t.pagosMeses).forEach(status => { if(status === 'Pagado') mesesPagadosUsuario++; });
+                            estadoPagoActualUsuario = t.pagosMeses[`mes_${mesActualSeleccionado}`] || "Pendiente";
                         }
                         miEstadoString = `Turno #${t.numero} | ${mesesPagadosUsuario} / 18 Meses`;
                     }
@@ -342,6 +440,54 @@
             }
             document.getElementById('stat-mi-estado').textContent = miEstadoString;
 
+            // MANEJO DEL MÓDULO VISUAL DE PAGO EXPRESS
+            const payZone = document.getElementById('user-pay-zone');
+            const containerButtons = document.getElementById('container-pay-buttons');
+            const textPayStatus = document.getElementById('text-user-pay-status');
+
+            if(miEstadoString === "Sin turno asignado" || userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
+                payZone.style.display = "none"; // Ocultar para admin o no asignados
+            } else {
+                payZone.style.display = "block";
+                containerButtons.innerHTML = "";
+
+                if(estadoPagoActualUsuario === "Pagado") {
+                    payZone.style.background = "linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%)";
+                    payZone.style.borderColor = "var(--success)";
+                    textPayStatus.innerHTML = "🎉 <strong>¡Estás al día este mes!</strong> Muchas gracias por tu aporte.";
+                } else {
+                    payZone.style.background = "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)";
+                    payZone.style.borderColor = "var(--warning)";
+                    textPayStatus.innerHTML = `Tienes una cuota pendiente de <strong>$6.000 ARS</strong> para el <strong>Mes ${mesActualSeleccionado}</strong>. Elige cómo abonar:`;
+                    
+                    // Botón Mercado Pago si está configurado
+                    if(data.linkPago) {
+                        let btnMp = document.createElement('button');
+                        btnMp.className = "btn-pay-mp";
+                        btnMp.innerHTML = "💙 Pagar por Mercado Pago";
+                        btnMp.onclick = () => { window.open(data.linkPago, '_blank'); };
+                        containerButtons.appendChild(btnMp);
+                    }
+                    
+                    // Botón Alias si está configurado
+                    if(data.aliasCobro) {
+                        let btnAlias = document.createElement('button');
+                        btnAlias.className = "btn-pay-alias";
+                        btnAlias.innerHTML = "📋 Copiar Alias / CVU";
+                        btnAlias.onclick = () => {
+                            navigator.clipboard.writeText(data.aliasCobro);
+                            alert(`¡Alias "${data.aliasCobro}" copiado al portapapeles!\nAbre tu home banking o billetera virtual y pega el código para transferir.`);
+                        };
+                        containerButtons.appendChild(btnAlias);
+                    }
+
+                    if(!data.linkPago && !data.aliasCobro) {
+                        containerButtons.innerHTML = "<small style='color:var(--text-light)'>El organizador aún no configuró los datos de la billetera virtual.</small>";
+                    }
+                }
+            }
+
+            // TABLAS PÚBLICAS Y ADMIN
             const tbodyPublico = document.getElementById('tabla-turnos-publica');
             tbodyPublico.innerHTML = "";
             const tbodyAdmin = document.getElementById('tabla-turnos-admin');
@@ -390,7 +536,23 @@
             }
         }
 
-        // GUARDAR CAMBIOS DESDE PANEL DE ADMIN
+        // GUARDAR AJUSTES DE RECAUDACIÓN (ADMIN)
+        function guardarConfiguracionGlobalGrupo() {
+            const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
+            const alias = document.getElementById('admin-input-alias').value.trim();
+            const link = document.getElementById('admin-input-linkpago').value.trim();
+
+            let updates = {};
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = monto;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/aliasCobro`] = alias;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/linkPago`] = link;
+
+            db.ref().update(updates).then(() => {
+                generarLineaHistorial(`Mariano actualizó los datos de recaudación y caja del grupo.`);
+                alert("Datos de cobro y aguinaldo actualizados globalmente.");
+            });
+        }
+
         function guardarFilaAdmin(numeroTurno) {
             const nuevoNombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const nuevoEmail = document.getElementById(`email-${numeroTurno}`).value.trim();
@@ -398,15 +560,15 @@
             const nuevoPago = document.getElementById(`pago-${numeroTurno}`).value;
             const nuevoCobro = document.getElementById(`cobro-${numeroTurno}`).value === "true";
 
-            let estadoPrevioPago = cacheDataFirebase.turnos[numeroTurno].pagosMeses ? cacheDataFirebase.turnos[numeroTurno].pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
-            let estadoPrevioCobro = cacheDataFirebase.turnos[numeroTurno].cobrado;
+            let estadoPrevioPago = cacheGrupoData.turnos[numeroTurno].pagosMeses ? cacheGrupoData.turnos[numeroTurno].pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
+            let estadoPrevioCobro = cacheGrupoData.turnos[numeroTurno].cobrado;
 
             let updates = {};
-            updates[`pasanaku_multimes/turnos/${numeroTurno}/nombre`] = nuevoNombre;
-            updates[`pasanaku_multimes/turnos/${numeroTurno}/email`] = nuevoEmail;
-            updates[`pasanaku_multimes/turnos/${numeroTurno}/telefono`] = nuevoTelefono;
-            updates[`pasanaku_multimes/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
-            updates[`pasanaku_multimes/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/nombre`] = nuevoNombre;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/email`] = nuevoEmail;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/telefono`] = nuevoTelefono;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
 
             db.ref().update(updates).then(() => {
                 if (estadoPrevioPago !== "Pagado" && nuevoPago === "Pagado") {
@@ -416,48 +578,30 @@
                 } else {
                     generarLineaHistorial(`Mariano actualizó la ficha del Turno ${numeroTurno} (${nuevoNombre}).`);
                 }
-                alert(`Ficha del Turno ${numeroTurno} guardada con éxito.`);
+                alert(`Cambios guardados.`);
             });
         }
 
-        // FUNCIÓN INTEGRADA CON WHATSAPP WEB / APP
         function enviarReciboWhatsApp(numeroTurno) {
             const nombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const telefono = document.getElementById(`phone-${numeroTurno}`).value.trim();
             
-            // Mensaje pre-armado
-            const mensaje = `¡Hola ${nombre}! Tu pago de $6.000 para el Turno ${numeroTurno} (Mes ${mesActualSeleccionado}) ya fue registrado en la app. Saldo total del pozo: $108.000.`;
+            const mensaje = `¡Hola ${nombre}! Tu pago de $6.000 para el Turno ${numeroTurno} (Mes ${mesActualSeleccionado}) en el grupo "${cacheGrupoData.nombre}" ya fue registrado en la app. Saldo total del pozo: $108.000.`;
             const mensajeCodificado = encodeURIComponent(mensaje);
             
-            let urlWhatsApp = "";
-            if (telefono) {
-                // Abre chat directo si hay número de teléfono guardado
-                urlWhatsApp = `https://wa.me/${telefono}?text=${mensajeCodificado}`;
-            } else {
-                // Abre el selector global si no tiene asignado número
-                urlWhatsApp = `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
-            }
-            
+            let urlWhatsApp = telefono ? `https://wa.me/${telefono}?text=${mensajeCodificado}` : `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
             window.open(urlWhatsApp, '_blank');
         }
 
-        function guardarAguinaldoGlobal() {
-            const monto = parseFloat(document.getElementById('admin-input-aguinaldo').value) || 0;
-            db.ref('pasanaku_multimes/fondoAguinaldo').set(monto).then(() => {
-                generarLineaHistorial(`Mariano actualizó el Fondo de Aguinaldo Global a $${monto.toLocaleString('es-AR')} ARS.`);
-                alert("Bolsa de aguinaldo actualizada.");
-            });
-        }
-
         function agregarNuevoCasilleroTurno() {
-            db.ref('pasanaku_multimes/turnos').once('value', (snapshot) => {
+            db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos`).once('value', (snapshot) => {
                 let totalActual = snapshot.numChildren() || 0;
                 let nuevoNumero = totalActual + 1;
                 
                 let pagosMeses = {};
                 for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
 
-                db.ref(`pasanaku_multimes/turnos/${nuevoNumero}`).set({
+                db.ref(`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${nuevoNumero}`).set({
                     numero: nuevoNumero,
                     nombre: "Participante " + nuevoNumero,
                     email: "",
@@ -465,11 +609,35 @@
                     pagosMeses: pagosMeses,
                     cobrado: false
                 }).then(() => {
-                    generarLineaHistorial(`Mariano expandió el Pasanaku creando el Turno Número ${nuevoNumero}.`);
+                    generarLineaHistorial(`Mariano expandió el grupo creando el Turno Número ${nuevoNumero}.`);
                     alert(`¡Turno ${nuevoNumero} añadido!`);
                 });
             });
         }
+
+        function procesarAutenticacion() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) { alert("Completa todos los campos"); return; }
+
+            if (authMode === 'login') {
+                firebase.auth().signInWithEmailAndPassword(email, password).catch(e => alert("Error: " + e.message));
+            } else {
+                firebase.auth().createUserWithEmailAndPassword(email, password)
+                    .then(() => alert("¡Cuenta creada!"))
+                    .catch(e => alert("Error al registrar: " + e.message));
+            }
+        }
+
+        function conmutarAuthMode() {
+            authMode = (authMode === 'login') ? 'register' : 'login';
+            document.getElementById('auth-title').textContent = authMode === 'login' ? 'Iniciar Sesión' : 'Registrar Nuevo Participante';
+            document.getElementById('btn-primary-auth').textContent = authMode === 'login' ? 'Ingresar' : 'Crear Cuenta';
+            document.getElementById('btn-toggle-auth').textContent = authMode === 'login' ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Inicia sesión';
+        }
+
+        function cerrarSesion() { firebase.auth().signOut(); }
+        function cambiarVista(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
     </script>
 </body>
 </html>
