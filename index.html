@@ -63,10 +63,11 @@
         .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
         .data-table th { background-color: #f9fafb; font-weight: 600; }
 
-        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
         .badge.success { background: #d1fae5; color: #065f46; }
         .badge.danger { background: #fee2e2; color: #991b1b; }
         .badge.warning { background: #fef3c7; color: #92400e; }
+        .badge.info { background: #dbeafe; color: #1e40af; }
 
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: var(--card-bg); padding: 15px 25px; border-radius: 12px; }
         .btn-logout { width: auto; padding: 8px 16px; background-color: #374151; font-size: 14px; }
@@ -82,6 +83,8 @@
         
         .creator-container { display: flex; gap: 10px; align-items: flex-end; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
         .admin-config-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9; }
+        
+        .sorteo-banner-box { padding: 18px; border-radius: 12px; text-align: center; margin-bottom: 20px; font-size: 15px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -135,6 +138,11 @@
                 </div>
             </div>
 
+            <!-- PIZARRA PÚBLICA DE RESULTADOS DEL FIXTURE GLOBAL -->
+            <div id="public-sorteo-banner" class="sorteo-banner-box">
+                Cargando estado del fixture general...
+            </div>
+
             <!-- VENTANA DE PAGO RÁPIDO PARA PARTICIPANTES -->
             <div id="user-pay-zone" class="pay-zone-card">
                 <h3 style="color:#b45309; font-size: 18px; margin-bottom: 5px;">💳 Canales de Pago del Grupo</h3>
@@ -144,7 +152,7 @@
 
             <div class="dashboard-grid">
                 <div class="stat-card">
-                    <h3>Mi Turno en este Grupo</h3>
+                    <h3>Mi Ficha en este Grupo</h3>
                     <div id="stat-mi-estado" class="value" style="color:var(--primary)">Buscando...</div>
                 </div>
                 <div class="stat-card">
@@ -160,14 +168,14 @@
             <!-- TABLA PÚBLICA -->
             <div class="card">
                 <h2>Lista Oficial: <span id="text-grupo-titulo" style="color: var(--primary);">...</span> - <span id="text-mes-titulo" style="color: var(--primary);">Mes 1</span></h2>
-                <p>Monto líquido a cobrar por el dueño del pozo este mes: <strong id="text-pozo-estimado" style="color: #10b981;">$90.000 ARS</strong></p>
+                <p>Monto líquido del pozo mensual básico: <strong style="color: #10b981;">$90.000 ARS</strong></p>
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Turno</th>
+                            <th>Casillero</th>
                             <th>Participante</th>
-                            <th>Estado Pago</th>
-                            <th>¿Cobró el Pozo?</th>
+                            <th>Estado Pago (Este Mes)</th>
+                            <th>Fixture Asignado (Todo el año)</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-turnos-publica"></tbody>
@@ -177,8 +185,14 @@
             <!-- PANEL ADMINISTRADOR (SOLO MARIANO) -->
             <div id="panel-administrador" class="card admin-box">
                 <h2>🛠️ Panel de Control (Organizador General)</h2>
-                <p style="margin-bottom: 15px;">Ajustes de tesorería y asignación de turnos. Al marcar como "Pagado" se suman automáticamente $1.000 al aguinaldo.</p>
+                <p style="margin-bottom: 15px;">Ajustes de tesorería y lanzamiento del bolillero automático único.</p>
                 
+                <!-- SECCIÓN DE BOLILLERO GLOBAL EN PANEL ADMIN -->
+                <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <h4 style="color:#1e40af; font-size:16px; margin-bottom:6px;">🎰 Tómbola Inicial de Ciclo Única</h4>
+                    <div id="admin-sorteo-ctrls"></div>
+                </div>
+
                 <div class="admin-config-row">
                     <div>
                         <label>Auditoría manual Aguinaldo ($):</label>
@@ -203,9 +217,8 @@
                     <thead>
                         <tr>
                             <th>N°</th>
-                            <th style="width: 40%;">Datos del Participante</th>
+                            <th style="width: 50%;">Datos del Participante</th>
                             <th>Pago ($6.000)</th>
-                            <th>¿Cobró Pozo?</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -350,7 +363,7 @@
             for(let i=1; i<=18; i++) {
                 let pagosMeses = {};
                 for(let m=1; m<=18; m++) { pagosMeses[`mes_${m}`] = "Pendiente"; }
-                turnosIniciales[i] = { numero: i, nombre: "Participante " + i, email: "", telefono: "", pagosMeses: pagosMeses, cobrado: false };
+                turnosIniciales[i] = { numero: i, nombre: "Participante " + i, email: "", telefono: "", pagosMeses: pagosMeses };
             }
 
             nuevoGrupoRef.set({
@@ -359,7 +372,8 @@
                 fondoAguinaldo: 0,
                 aliasCobro: "",
                 linkPago: "",
-                turnos: turnosIniciales
+                turnos: turnosIniciales,
+                sorteos: ""
             }).then(() => {
                 idGrupoSeleccionado = nuevoId;
                 generarLineaHistorial(`Mariano creó el grupo "${nombreGrupo}".`);
@@ -390,7 +404,7 @@
             if(!idGrupoSeleccionado) return;
             const ahora = new Date();
             const fecha = ahora.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const hora = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const hora = Scientific = ahora.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
             const logCompleto = `📝 ${fecha} ${hora} - ${textoAccion}`;
             
             db.ref(`pasanaku_v5/historial/${idGrupoSeleccionado}`).push({
@@ -405,33 +419,83 @@
             document.getElementById('admin-input-alias').value = data.aliasCobro || "";
             document.getElementById('admin-input-linkpago').value = data.linkPago || "";
 
-            // Calcular pozo dinámico del mes ($5.000 por cada participante registrado en el grupo)
-            let totalTurnosActivos = data.turnos ? Object.keys(data.turnos).length : 18;
-            let valorPozoLiquido = totalTurnosActivos * 5000;
-            document.getElementById('text-pozo-estimado').textContent = "$" + valorPozoLiquido.toLocaleString('es-AR') + " ARS";
+            // --- MAPEAR GANADORES DEL FIXTURE ---
+            let mapaComun = {};
+            let mapaAguinaldo = {};
+            if(data.sorteos) {
+                Object.keys(data.sorteos).forEach(mesKey => {
+                    let mNum = parseInt(mesKey.replace('mes_', ''));
+                    let s = data.sorteos[mesKey];
+                    if(s.ganadorComun) mapaComun[s.ganadorComun] = mNum;
+                    if(s.ganadorAguinaldo) mapaAguinaldo[s.ganadorAguinaldo] = mNum;
+                });
+            }
 
-            let miEstadoString = "Sin turno asignado";
-            let mesesPagadosUsuario = 0;
+            // --- RENDERIZAR CARTEL DE RESULTADOS DEL MES SELECCIONADO ---
+            const pBanner = document.getElementById('public-sorteo-banner');
+            const sMes = (data.sorteos && data.sorteos[`mes_${mesActualSeleccionado}`]) ? data.sorteos[`mes_${mesActualSeleccionado}`] : null;
+            
+            if(data.sorteos && sMes) {
+                pBanner.style.background = "linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%)";
+                pBanner.style.border = "1px solid #2563eb";
+                let tC = data.turnos[sMes.ganadorComun];
+                let htmlRes = `🎉 <strong>Fixture Oficial Guardado - Resultados Mes ${mesActualSeleccionado}</strong><br>`;
+                htmlRes += `🎁 Pozo Mensual ($90.000): <span style="color:#1d4ed8; font-weight:bold;">${tC ? tC.nombre : 'Participante'}</span> (Casillero #${sMes.ganadorComun})`;
+                
+                if(sMes.ganadorAguinaldo) {
+                    let tA = data.turnos[sMes.ganadorAguinaldo];
+                    let estadoAg = sMes.aguinaldoEntregado ? " (Entregado ✅)" : " (Acumulando / Pendiente ⏳)";
+                    htmlRes += `<br>💰 Súper Aguinaldo ($108.000): <span style="color:#7c3aed; font-weight:bold;">${tA ? tA.nombre : 'Participante'}</span> (Casillero #${sMes.ganadorAguinaldo}) <small>${estadoAg}</small>`;
+                }
+                pBanner.innerHTML = htmlRes;
+            } else {
+                pBanner.style.background = "#fef3c7";
+                pBanner.style.border = "1px solid #f59e0b";
+                pBanner.innerHTML = `⏳ <strong>Esperando Sorteo Inicial:</strong> El organizador aún no ha ejecutado la tómbola única para diagramar los 18 meses del ciclo.`;
+            }
+
+            // --- CONFIGURAR BOTONES DE ADMINISTRADOR EN PANEL ---
+            if(userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
+                const adminCtrls = document.getElementById('admin-sorteo-ctrls');
+                if(data.sorteos) {
+                    let htmlAdmin = `<span style="color:#16a34a; font-weight:bold;">✅ Fixture de 18 meses bloqueado y publicado.</span>`;
+                    
+                    if([6,12,18].includes(mesActualSeleccionado)) {
+                        let sMesAct = data.sorteos[`mes_${mesActualSeleccionado}`];
+                        if(sMesAct && !sMesAct.aguinaldoEntregado) {
+                            htmlAdmin += `<br><button onclick="entregarAguinaldoMesActivo()" style="background-color:#7c3aed; font-size:13px; padding:6px 12px; margin-top:8px;">🎁 Confirmar Entrega de Aguinaldo Mes ${mesActualSeleccionado} ($108.000)</button>`;
+                        } else if(sMesAct && sMesAct.aguinaldoEntregado) {
+                            htmlAdmin += `<br><span style="color:#7c3aed; font-weight:bold;">✨ Aguinaldo de este mes liquidado correctamente.</span>`;
+                        }
+                    }
+                    adminCtrls.innerHTML = htmlAdmin;
+                } else {
+                    adminCtrls.innerHTML = `<button onclick="realizarSorteoInicialUnico()" style="background-color:#2563eb; font-size:15px; padding:12px 24px; width:100%;">🎰 Lanzar Sorteo General Único (18 Meses + Aguinaldos)</button>`;
+                }
+            }
+
+            // --- EVALUAR PANEL DE COMPRA / INGRESO DEL PARTICIPANTE ---
+            let miFichaString = "Sin casillero asignado";
             let estadoPagoActualUsuario = "Pendiente";
             
             if (data.turnos) {
                 Object.values(data.turnos).forEach(t => {
                     if(t.email && t.email.toLowerCase().trim() === userEmailLogueado.toLowerCase().trim()) {
-                        if(t.pagosMeses) {
-                            Object.values(t.pagosMeses).forEach(status => { if(status === 'Pagado') mesesPagadosUsuario++; });
-                            estadoPagoActualUsuario = t.pagosMeses[`mes_${mesActualSeleccionado}`] || "Pendiente";
-                        }
-                        miEstadoString = `Turno #${t.numero} | ${mesesPagadosUsuario} / 18 Meses`;
+                        estadoPagoActualUsuario = (t.pagosMeses && t.pagosMeses[`mes_${mesActualSeleccionado}`]) || "Pendiente";
+                        let misPremios = [];
+                        if(mapaComun[t.numero]) misPremios.push(`Pozo Mes ${mapaComun[t.numero]}`);
+                        if(mapaAguinaldo[t.numero]) misPremios.push(`Aguinaldo Mes ${mapaAguinaldo[t.numero]}`);
+                        miFichaString = `Casillero #${t.numero} | Asignaciones: [${misPremios.length ? misPremios.join(', ') : 'Ninguna'}]`;
                     }
                 });
             }
-            document.getElementById('stat-mi-estado').textContent = miEstadoString;
+            document.getElementById('stat-mi-estado').textContent = miFichaString;
 
             const payZone = document.getElementById('user-pay-zone');
             const containerButtons = document.getElementById('container-pay-buttons');
             const textPayStatus = document.getElementById('text-user-pay-status');
 
-            if(miEstadoString === "Sin turno asignado" || userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
+            if(miFichaString === "Sin casillero asignado" || userEmailLogueado.toLowerCase() === "mariano2182@hotmail.com.ar") {
                 payZone.style.display = "none";
             } else {
                 payZone.style.display = "block";
@@ -440,11 +504,11 @@
                 if(estadoPagoActualUsuario === "Pagado") {
                     payZone.style.background = "linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%)";
                     payZone.style.borderColor = "var(--success)";
-                    textPayStatus.innerHTML = "🎉 <strong>¡Estás al día este mes!</strong> Tu cuota de $6.000 fue procesada ($5.000 al pozo y $1.000 a tu aguinaldo).";
+                    textPayStatus.innerHTML = "🎉 <strong>¡Estás al día este mes!</strong> Tu cuota de $6.000 fue procesada ($5.000 al pozo y $1.000 a la bolsa acumulativa).";
                 } else {
                     payZone.style.background = "linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)";
                     payZone.style.borderColor = "var(--warning)";
-                    textPayStatus.innerHTML = `Tenés una cuota pendiente de <strong>$6.000 ARS</strong> para el <strong>Mes ${mesActualSeleccionado}</strong> ($5.000 pozo + $1.000 aguinaldo de retención). Elegí el método:`;
+                    textPayStatus.innerHTML = `Tenés una cuota pendiente de <strong>$6.000 ARS</strong> para el <strong>Mes ${mesActualSeleccionado}</strong> ($5.000 pozo + $1.000 de retención para aguinaldos).`;
                     
                     if(data.linkPago) {
                         let btnMp = document.createElement('button');
@@ -459,16 +523,14 @@
                         btnAlias.innerHTML = "📋 Copiar Alias / CVU";
                         btnAlias.onclick = () => {
                             navigator.clipboard.writeText(data.aliasCobro);
-                            alert(`¡Alias "${data.aliasCobro}" copiado!\nPegalo en tu billetera virtual para hacer la transferencia.`);
+                            alert(`¡Alias "${data.aliasCobro}" copiado!`);
                         };
                         containerButtons.appendChild(btnAlias);
-                    }
-                    if(!data.linkPago && !data.aliasCobro) {
-                        containerButtons.innerHTML = "<small style='color:var(--text-light)'>El organizador aún no configuró las cuentas para este grupo.</small>";
                     }
                 }
             }
 
+            // --- RENDERIZAR TABLAS PÚBLICAS Y DE ADMIN ---
             const tbodyPublico = document.getElementById('tabla-turnos-publica');
             tbodyPublico.innerHTML = "";
             const tbodyAdmin = document.getElementById('tabla-turnos-admin');
@@ -479,12 +541,16 @@
 
                 listaOrdenada.forEach(t => {
                     let estadoPagoMesActual = (t.pagosMeses && t.pagosMeses[`mes_${mesActualSeleccionado}`]) ? t.pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
-
                     let badgePago = estadoPagoMesActual === 'Pagado' ? '<span class="badge success">Al día</span>' : '<span class="badge danger">Pendiente</span>';
-                    let badgeCobro = t.cobrado ? '<span class="badge success">Sí (Pozo Entregado)</span>' : '<span class="badge warning">Ahorrando</span>';
                     
+                    // Mostrar qué mes le tocó en el sorteo inicial único
+                    let infoCronograma = "";
+                    if(mapaComun[t.numero]) infoCronograma += `<span class="badge info" style="margin-right:4px;">🎁 Cobrará Pozo: Mes ${mapaComun[t.numero]}</span>`;
+                    if(mapaAguinaldo[t.numero]) infoCronograma += `<span class="badge success">💰 Cobrará Aguinaldo: Mes ${mapaAguinaldo[t.numero]}</span>`;
+                    if(!infoCronograma) infoCronograma = '<span class="badge warning">Esperando Tómbola</span>';
+
                     let trPub = document.createElement('tr');
-                    trPub.innerHTML = `<td><strong>Turno ${t.numero}</strong></td><td>${t.nombre} ${t.email ? `<small style="color:var(--text-light)"><br>📧 ${t.email}</small>` : ''}</td><td>${badgePago}</td><td>${badgeCobro}</td>`;
+                    trPub.innerHTML = `<td><strong>N° ${t.numero}</strong></td><td>${t.nombre} ${t.email ? `<small style="color:var(--text-light)"><br>📧 ${t.email}</small>` : ''}</td><td>${badgePago}</td><td>${infoCronograma}</td>`;
                     tbodyPublico.appendChild(trPub);
 
                     let trAdm = document.createElement('tr');
@@ -501,12 +567,6 @@
                                 <option value="Pagado" ${estadoPagoMesActual === 'Pagado' ? 'selected' : ''}>Pagado</option>
                             </select>
                         </td>
-                        <td>
-                            <select id="cobro-${t.numero}">
-                                <option value="false" ${!t.cobrado ? 'selected' : ''}>No</option>
-                                <option value="true" ${t.cobrado ? 'selected' : ''}>Sí</option>
-                            </select>
-                        </td>
                         <td style="white-space: nowrap;">
                             <button class="btn-admin-save" onclick="guardarFilaAdmin(${t.numero})">💾</button>
                             <button class="btn-whatsapp" onclick="enviarReciboWhatsApp(${t.numero})">💬</button>
@@ -515,6 +575,110 @@
                     tbodyAdmin.appendChild(trAdm);
                 });
             }
+        }
+
+        // --- MOTOR DEL BOLILLERO INICIAL ÚNICO (ASIGNA TODO EL AÑO) ---
+        function realizarSorteoInicialUnico() {
+            if(!cacheGrupoData || !idGrupoSeleccionado) return;
+            if(cacheGrupoData.sorteos) {
+                alert("El cronograma inicial ya fue sorteado para este grupo.");
+                return;
+            }
+
+            let confirmacion = confirm("⚠️ ATENCIÓN MARIANO:\n\n¿Estás seguro de lanzar el SORTEO INICIAL GENERAL?\n\nEsto calculará de forma automática los ganadores de los 18 meses y los 3 aguinaldos cruzados sin repetición. Los resultados quedarán grabados en la base de datos de manera definitiva y pública.");
+            if(!confirmacion) return;
+
+            let listaTurnos = Object.values(cacheGrupoData.turnos || {});
+            if(listaTurnos.length < 18) {
+                alert("Para lanzar el sorteo inicial necesitás tener creados los 18 casilleros en la lista (completá al menos los nombres).");
+                return;
+            }
+
+            // Mapear los números de casilleros (1 al 18)
+            let numerosCasilleros = listaTurnos.map(t => parseInt(t.numero));
+            
+            // 1. Permutación aleatoria completa para los 18 pozos mensuales comunes
+            let fixtureMeses = [...numerosCasilleros];
+            for (let i = fixtureMeses.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [fixtureMeses[i], fixtureMeses[j]] = [fixtureMeses[j], fixtureMeses[i]];
+            }
+
+            // 2. Asignación inteligente de los 3 aguinaldos (Meses 6, 12, 18)
+            // Reglas: No se repiten entre sí los aguinaldos y no coinciden con el ganador de ese mes
+            let asignacionAguinaldos = {};
+            let excluidosDeAguinaldo = [];
+
+            // Mes 6
+            let ganadorMes6 = fixtureMeses[5]; // índice 5 = Mes 6
+            let elegiblesMes6 = numerosCasilleros.filter(n => n !== ganadorMes6 && !excluidosDeAguinaldo.includes(n));
+            let ag6 = elegiblesMes6[Math.floor(Math.random() * elegiblesMes6.length)];
+            asignacionAguinaldos[6] = ag6;
+            excluidosDeAguinaldo.push(ag6);
+
+            // Mes 12
+            let ganadorMes12 = fixtureMeses[11]; // índice 11 = Mes 12
+            let elegiblesMes12 = numerosCasilleros.filter(n => n !== ganadorMes12 && !excluidosDeAguinaldo.includes(n));
+            let ag12 = elegiblesMes12[Math.floor(Math.random() * elegiblesMes12.length)];
+            asignacionAguinaldos[12] = ag12;
+            excluidosDeAguinaldo.push(ag12);
+
+            // Mes 18
+            let ganadorMes18 = fixtureMeses[17]; // índice 17 = Mes 18
+            let elegiblesMes18 = numerosCasilleros.filter(n => n !== ganadorMes18 && !excluidosDeAguinaldo.includes(n));
+            let ag18 = elegiblesMes18[Math.floor(Math.random() * elegiblesMes18.length)];
+            asignacionAguinaldos[18] = ag18;
+            excluidosDeAguinaldo.push(ag18);
+
+            // Construcción del nodo estructurado para Firebase
+            let sorteosObj = {};
+            for(let m = 1; m <= 18; m++) {
+                sorteosObj[`mes_${m}`] = {
+                    ganadorComun: fixtureMeses[m-1]
+                };
+                if([6, 12, 18].includes(m)) {
+                    sorteosObj[`mes_${m}`].ganadorAguinaldo = asignacionAguinaldos[m];
+                    sorteosObj[`mes_${m}`].aguinaldoEntregado = false;
+                }
+            }
+
+            let updates = {};
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/sorteos`] = sorteosObj;
+
+            db.ref().update(updates).then(() => {
+                generarLineaHistorial("🎰 ¡BOLILLERO INICIAL EJECUTADO! Todo el fixture de ganadores comunes y aguinaldos de los 18 meses quedó establecido públicamente.");
+                alert("¡Fixture exitoso! El calendario inalterable quedó grabado para todo el grupo.");
+            });
+        }
+
+        // --- LIQUIDACIÓN DE AGUINALDO EN LOS MESES CLAVE ---
+        function entregarAguinaldoMesActivo() {
+            if(!cacheGrupoData || !idGrupoSeleccionado) return;
+            let sMes = cacheGrupoData.sorteos ? cacheGrupoData.sorteos[`mes_${mesActualSeleccionado}`] : null;
+            if(!sMes || !sMes.ganadorAguinaldo) return;
+            
+            if(sMes.aguinaldoEntregado) {
+                alert("Este aguinaldo ya figura como pagado.");
+                return;
+            }
+
+            let fichaGanador = cacheGrupoData.turnos[sMes.ganadorAguinaldo];
+            let nombreGanador = fichaGanador ? fichaGanador.nombre : `Casillero #${sMes.ganadorAguinaldo}`;
+
+            let c = confirm(`¿Confirmás que le entregaste los $108.000 ARS de Aguinaldo a ${nombreGanador}? El sistema descontará el dinero del fondo visual.`);
+            if(!c) return;
+
+            let fondoActual = parseFloat(cacheGrupoData.fondoAguinaldo || 0);
+            let nuevoFondo = Math.max(0, fondoActual - 108000);
+
+            let updates = {};
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/sorteos/mes_${mesActualSeleccionado}/aguinaldoEntregado`] = true;
+            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = nuevoFondo;
+
+            db.ref().update(updates).then(() => {
+                generarLineaHistorial(`💰 Mariano entregó el Súper Pozo Aguinaldo de $108.000 ARS a ${nombreGanador} (Mes ${mesActualSeleccionado}). Caja de aguinaldo reiniciada.`);
+                alert("Entrega asentada perfectamente.");
+            });
         }
 
         function guardarConfiguracionGlobalGrupo() {
@@ -538,20 +702,16 @@
             const nuevoEmail = document.getElementById(`email-${numeroTurno}`).value.trim();
             const nuevoTelefono = document.getElementById(`phone-${numeroTurno}`).value.trim();
             const nuevoPago = document.getElementById(`pago-${numeroTurno}`).value;
-            const nuevoCobro = document.getElementById(`cobro-${numeroTurno}`).value === "true";
 
             let estadoPrevioPago = cacheGrupoData.turnos[numeroTurno].pagosMeses ? cacheGrupoData.turnos[numeroTurno].pagosMeses[`mes_${mesActualSeleccionado}`] : "Pendiente";
-            let estadoPrevioCobro = cacheGrupoData.turnos[numeroTurno].cobrado;
             let actualFondoAguinaldo = parseFloat(cacheGrupoData.fondoAguinaldo || 0);
 
             let updates = {};
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/nombre`] = nuevoNombre;
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/email`] = nuevoEmail;
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/telefono`] = nuevoTelefono;
-            updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/cobrado`] = nuevoCobro;
             updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/turnos/${numeroTurno}/pagosMeses/mes_${mesActualSeleccionado}`] = nuevoPago;
 
-            // RULOS DE AUTOMATIZACIÓN DE VALORES INTEGRADAS
             if (estadoPrevioPago !== "Pagado" && nuevoPago === "Pagado") {
                 actualFondoAguinaldo += 1000;
                 updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = actualFondoAguinaldo;
@@ -560,12 +720,8 @@
                 actualFondoAguinaldo = Math.max(0, actualFondoAguinaldo - 1000);
                 updates[`pasanaku_v5/grupos/${idGrupoSeleccionado}/fondoAguinaldo`] = actualFondoAguinaldo;
                 generarLineaHistorial(`Mariano revirtió pago de ${nuevoNombre} (Mes ${mesActualSeleccionado}). Se descontaron $1.000 del Aguinaldo.`);
-            } else if (!estadoPrevioCobro && nuevoCobro) {
-                let totalTurnos = Object.keys(cacheGrupoData.turnos).length;
-                let pozoEntrega = totalTurnos * 5000;
-                generarLineaHistorial(`Mariano registró la entrega del Pozo retenido de $${pozoEntrega.toLocaleString('es-AR')} ARS a ${nuevoNombre}.`);
             } else {
-                generarLineaHistorial(`Mariano editó datos técnicos del Turno ${numeroTurno}.`);
+                generarLineaHistorial(`Mariano editó datos de contacto del Turno ${numeroTurno}.`);
             }
 
             db.ref().update(updates).then(() => {
@@ -576,11 +732,8 @@
         function enviarReciboWhatsApp(numeroTurno) {
             const nombre = document.getElementById(`name-${numeroTurno}`).value.trim();
             const telefono = document.getElementById(`phone-${numeroTurno}`).value.trim();
-            
-            let totalTurnos = Object.keys(cacheGrupoData.turnos).length;
-            let pozoEntrega = totalTurnos * 5000;
 
-            const mensaje = `¡Hola ${nombre}! Tu cuota de $6.000 para el Turno ${numeroTurno} (Mes ${mesActualSeleccionado}) en el grupo "${cacheGrupoData.nombre}" fue recibida y guardada. $5.000 se sumaron al pozo mensual ($${pozoEntrega.toLocaleString('es-AR')}) y $1.000 se reservaron para tu fondo de Aguinaldo final. 🏆`;
+            const mensaje = `¡Hola ${nombre}! Tu cuota de $6.000 para el Mes ${mesActualSeleccionado} en el grupo "${cacheGrupoData.nombre}" fue recibida con éxito. $5.000 ingresaron al pozo general y $1.000 se sumaron al pozo acumulativo del Aguinaldo. ¡Gracias por cumplir! 🏆`;
             const url = telefono ? `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}` : `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
             window.open(url, '_blank');
         }
@@ -597,8 +750,7 @@
                     nombre: "Participante " + nuevoNumero,
                     email: "",
                     telefono: "",
-                    pagosMeses: pagosMeses,
-                    cobrado: false
+                    pagosMeses: pagosMeses
                 }).then(() => {
                     generarLineaHistorial(`Mariano expandió la estructura agregando el Turno N° ${nuevoNumero}.`);
                     alert(`¡Turno ${nuevoNumero} incorporado con éxito!`);
